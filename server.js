@@ -7,16 +7,21 @@ const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'db.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
+// Family members are fixed configuration (not user-editable data),
+// so palette/name tweaks here always take effect immediately.
+// 'family' is a special category for whole-household items (holidays, family outings, etc.)
+const MEMBERS = [
+  { id: 'ben', name: 'Ben', color: '#A9C8DE' },      // pastel blue
+  { id: 'inez', name: 'Inez', color: '#CBB8DD' },    // pastel purple
+  { id: 'tyler', name: 'Tyler', color: '#E6A9A0' },  // pastel red
+  { id: 'miya', name: 'Miya', color: '#A9DBC0' },    // pastel mint green
+  { id: 'family', name: 'Family', color: '#F0C9A0' } // pastel peach, whole-household items
+];
+
 // ---------- Simple JSON "database" ----------
 function loadDB() {
   if (!fs.existsSync(DATA_FILE)) {
     const initial = {
-      members: [
-        { id: 'ben', name: 'Ben', color: '#3B82F6' },
-        { id: 'inez', name: 'Inez', color: '#A855F7' },
-        { id: 'miya', name: 'Miya', color: '#EC4899' },
-        { id: 'tyler', name: 'Tyler', color: '#22C55E' }
-      ],
       events: [],
       chores: [],
       lists: [],
@@ -26,7 +31,9 @@ function loadDB() {
     fs.writeFileSync(DATA_FILE, JSON.stringify(initial, null, 2));
     return initial;
   }
-  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  const db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+  delete db.members; // legacy field, no longer stored here
+  return db;
 }
 
 function saveDB(db) {
@@ -95,7 +102,7 @@ async function handleAPI(req, res, urlPath) {
   const collections = ['events', 'chores', 'lists', 'reminders', 'files'];
 
   if (resource === 'members' && req.method === 'GET') {
-    return sendJSON(res, 200, db.members);
+    return sendJSON(res, 200, MEMBERS);
   }
 
   if (collections.includes(resource)) {
@@ -124,6 +131,16 @@ async function handleAPI(req, res, urlPath) {
       saveDB(db);
       return sendJSON(res, 200, removed[0]);
     }
+  }
+
+  if (resource === 'day' && itemId && req.method === 'GET') {
+    // itemId here is a date string YYYY-MM-DD
+    const date = itemId;
+    return sendJSON(res, 200, {
+      events: db.events.filter(e => date >= e.date && date <= (e.endDate || e.date)),
+      chores: db.chores.filter(c => c.due === date),
+      reminders: db.reminders.filter(r => r.date === date)
+    });
   }
 
   return sendJSON(res, 404, { error: 'Unknown endpoint' });
