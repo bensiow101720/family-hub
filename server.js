@@ -76,6 +76,7 @@ const MIME = {
 function serveStatic(req, res, urlPath) {
   let filePath = urlPath === '/' ? '/index.html' : urlPath;
   filePath = path.join(PUBLIC_DIR, filePath);
+  // Prevent path traversal
   if (!filePath.startsWith(PUBLIC_DIR)) {
     res.writeHead(403);
     return res.end('Forbidden');
@@ -94,8 +95,8 @@ function serveStatic(req, res, urlPath) {
 // ---------- API ----------
 async function handleAPI(req, res, urlPath) {
   const db = loadDB();
-  const parts = urlPath.split('/').filter(Boolean);
-  const resource = parts[1];
+  const parts = urlPath.split('/').filter(Boolean); // ['api', 'events', ':id']
+  const resource = parts[1]; // events, chores, lists, reminders, members, files
   const itemId = parts[2];
 
   const collections = ['events', 'chores', 'lists', 'reminders', 'files'];
@@ -133,6 +134,7 @@ async function handleAPI(req, res, urlPath) {
   }
 
   if (resource === 'day' && itemId && req.method === 'GET') {
+    // itemId here is a date string YYYY-MM-DD
     const date = itemId;
     return sendJSON(res, 200, {
       events: db.events.filter(e => date >= e.date && date <= (e.endDate || e.date)),
