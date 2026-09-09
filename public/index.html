@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FFF9EF;
+    --ink: #2B2B3A;
+    --yellow: #FFC93C;
+    --blue: #4FB0E8;
+    --coral: #FF6F59;
+    --green: #4CAF7D;
+    --white: #FFFFFF;
+    --shadow-offset: 4px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Nunito', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .heading {
+    font-family: 'Baloo 2', cursive;
+    margin: 0;
+  }
+  .app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 20px 60px;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: var(--white);
+    border: 3px solid var(--ink);
+    border-radius: 24px;
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--ink);
+    padding: 24px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 28px;
+    font-weight: 800;
+  }
+  .hero .date {
+    font-size: 15px;
+    font-weight: 600;
+    color: #6b6b7a;
+    margin-top: 4px;
+  }
+  .weather {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--yellow);
+    border: 3px solid var(--ink);
+    border-radius: 18px;
+    padding: 10px 18px;
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .weather .icon { font-size: 28px; }
+  .weather .loc { font-size: 12px; font-weight: 600; opacity: 0.75; display: block; }
+
+  /* ---------- Member chips ---------- */
+  .members {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .chip {
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-weight: 700;
+    font-family: 'Baloo 2', cursive;
+    cursor: pointer;
+    background: var(--white);
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.08s ease;
+    user-select: none;
+  }
+  .chip:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+  .chip.active { color: white; }
+
+  /* ---------- Tabs ---------- */
+  .tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    padding: 10px 16px;
+    font-family: 'Baloo 2', cursive;
+    font-weight: 700;
+    font-size: 15px;
+    background: var(--white);
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.08s ease;
+  }
+  .tab-btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+  .tab-btn.active { background: var(--blue); color: white; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--white);
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--ink);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 14px;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 2px solid var(--ink);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    background: #fffdf8;
+  }
+  .item-left { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); flex-shrink: 0; }
+  .item-title { font-weight: 700; }
+  .item-sub { font-size: 13px; color: #6b6b7a; font-weight: 600; }
+  .empty-state {
+    text-align: center;
+    padding: 30px 10px;
+    color: #8a8a97;
+    font-weight: 700;
+    font-family: 'Baloo 2', cursive;
+  }
+
+  .btn {
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    padding: 10px 20px;
+    font-family: 'Baloo 2', cursive;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--ink);
+    transition: transform 0.08s ease;
+    background: var(--green);
+    color: white;
+  }
+  .btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--ink); }
+  .btn.small { padding: 6px 14px; font-size: 13px; }
+  .btn.danger { background: var(--coral); }
+  .btn.blue { background: var(--blue); }
+
+  form.add-form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    align-items: center;
+  }
+  input, select {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    border: 2px solid var(--ink);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 14px;
+  }
+  input[type="text"] { flex: 1; min-width: 140px; }
+
+  .checkbox {
+    width: 22px; height: 22px;
+    border: 2px solid var(--ink);
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: white;
+  }
+  .checkbox.done { background: var(--green); }
+  .checkbox.done::after { content: "✓"; color: white; font-weight: 800; }
+  .done-text { text-decoration: line-through; opacity: 0.55; }
+
+  .list-block { margin-bottom: 22px; }
+  .list-block h4 { font-family: 'Baloo 2', cursive; font-size: 16px; margin-bottom: 8px; }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 22px; }
+    .app { padding: 14px 12px 50px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="hero">
+    <div>
+      <h1 id="greeting">Hi Family! 👋</h1>
+      <div class="date" id="today-date"></div>
+    </div>
+    <div class="weather" id="weather-box">
+      <span class="icon">🌤️</span>
+      <div>
+        <div id="weather-temp">--°</div>
+        <span class="loc" id="weather-loc">Loading weather…</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="members" id="member-filters"></div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="calendar">📅 Calendar</button>
+    <button class="tab-btn" data-tab="chores">🧹 Chores & Planning</button>
+    <button class="tab-btn" data-tab="reminders">⏰ Reminders</button>
+    <button class="tab-btn" data-tab="lists">📝 Lists</button>
+    <button class="tab-btn" data-tab="files">📁 Files</button>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="panel active" id="panel-calendar">
+    <div class="card">
+      <div class="section-title">Add an event or appointment</div>
+      <form class="add-form" id="event-form">
+        <input type="text" id="event-title" placeholder="What's happening?" required>
+        <input type="date" id="event-date" required>
+        <input type="time" id="event-time">
+        <select id="event-person"></select>
+        <button class="btn" type="submit">Add</button>
+      </form>
+    </div>
+    <div class="card">
+      <div class="section-title">Upcoming</div>
+      <div id="events-list"></div>
+    </div>
+  </div>
+
+  <!-- CHORES -->
+  <div class="panel" id="panel-chores">
+    <div class="card">
+      <div class="section-title">Add a chore, study task, or dog-grooming reminder</div>
+      <form class="add-form" id="chore-form">
+        <input type="text" id="chore-title" placeholder="e.g. Walk the dog, Study for maths test" required>
+        <select id="chore-person"></select>
+        <select id="chore-freq">
+          <option value="once">One-time</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+        </select>
+        <input type="date" id="chore-due">
+        <button class="btn" type="submit">Add</button>
+      </form>
+    </div>
+    <div class="card">
+      <div class="section-title">To Do</div>
+      <div id="chores-list"></div>
+    </div>
+  </div>
+
+  <!-- REMINDERS -->
+  <div class="panel" id="panel-reminders">
+    <div class="card">
+      <div class="section-title">Add a reminder</div>
+      <form class="add-form" id="reminder-form">
+        <input type="text" id="reminder-title" placeholder="Remind us to…" required>
+        <input type="date" id="reminder-date">
+        <select id="reminder-person"></select>
+        <button class="btn" type="submit">Add</button>
+      </form>
+    </div>
+    <div class="card">
+      <div class="section-title">Reminders</div>
+      <div id="reminders-list"></div>
+    </div>
+  </div>
+
+  <!-- LISTS -->
+  <div class="panel" id="panel-lists">
+    <div class="card">
+      <div class="section-title">Start a new list</div>
+      <form class="add-form" id="list-form">
+        <input type="text" id="list-name" placeholder="List name (e.g. Groceries)" required>
+        <button class="btn" type="submit">Create list</button>
+      </form>
+    </div>
+    <div id="lists-container"></div>
+  </div>
+
+  <!-- FILES -->
+  <div class="panel" id="panel-files">
+    <div class="card">
+      <div class="section-title">Shared files</div>
+      <p style="font-weight:600; color:#6b6b7a; margin-top:-6px;">Note a link, doc name, or where a shared file lives (e.g. a shared photo album link).</p>
+      <form class="add-form" id="file-form">
+        <input type="text" id="file-name" placeholder="File or photo name" required>
+        <input type="text" id="file-link" placeholder="Link (optional)">
+        <select id="file-person"></select>
+        <button class="btn" type="submit">Add</button>
+      </form>
+    </div>
+    <div class="card">
+      <div id="files-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let MEMBERS = [];
+let activeMemberFilter = 'all';
+
+async function api(path, method, body) {
+  const opts = { method: method || 'GET', headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  return res.json();
+}
+
+function memberColor(id) {
+  const m = MEMBERS.find(m => m.id === id);
+  return m ? m.color : '#999';
+}
+function memberName(id) {
+  const m = MEMBERS.find(m => m.id === id);
+  return m ? m.name : 'Everyone';
+}
+
+function fillPersonSelects() {
+  const selects = ['event-person', 'chore-person', 'reminder-person', 'file-person'];
+  selects.forEach(sid => {
+    const el = document.getElementById(sid);
+    el.innerHTML = MEMBERS.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  });
+}
+
+function renderMemberFilters() {
+  const box = document.getElementById('member-filters');
+  const allChip = `<div class="chip ${activeMemberFilter==='all'?'active':''}" data-id="all" style="${activeMemberFilter==='all' ? 'background:'+'#2B2B3A' : ''}">Everyone</div>`;
+  box.innerHTML = allChip + MEMBERS.map(m => {
+    const isActive = activeMemberFilter === m.id;
+    return `<div class="chip ${isActive?'active':''}" data-id="${m.id}" style="${isActive ? 'background:'+m.color : ''}">${m.name}</div>`;
+  }).join('');
+  box.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      activeMemberFilter = chip.dataset.id;
+      renderMemberFilters();
+      loadAll();
+    });
+  });
+}
+
+function setGreeting() {
+  const hour = new Date().getHours();
+  let greet = 'Hi Family!';
+  if (hour < 12) greet = 'Good morning, Family! ☀️';
+  else if (hour < 18) greet = 'Good afternoon, Family! 🌤️';
+  else greet = 'Good evening, Family! 🌙';
+  document.getElementById('greeting').textContent = greet;
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function loadWeather() {
+  function fetchWeather(lat, lon, label) {
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&temperature_unit=fahrenheit`)
+      .then(r => r.json())
+      .then(data => {
+        const t = Math.round(data.current.temperature_2m);
+        document.getElementById('weather-temp').textContent = t + '°F';
+        document.getElementById('weather-loc').textContent = label;
+      })
+      .catch(() => {
+        document.getElementById('weather-loc').textContent = 'Weather unavailable';
+      });
+  }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => fetchWeather(pos.coords.latitude, pos.coords.longitude, 'Your location'),
+      () => fetchWeather(40.7128, -74.0060, 'Default location')
+    );
+  } else {
+    fetchWeather(40.7128, -74.0060, 'Default location');
+  }
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- Events ----------
+document.getElementById('event-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  await api('/api/events', 'POST', {
+    title: document.getElementById('event-title').value,
+    date: document.getElementById('event-date').value,
+    time: document.getElementById('event-time').value,
+    person: document.getElementById('event-person').value
+  });
+  e.target.reset();
+  loadEvents();
+});
+
+async function loadEvents() {
+  let events = await api('/api/events');
+  if (activeMemberFilter !== 'all') events = events.filter(ev => ev.person === activeMemberFilter);
+  events.sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  const el = document.getElementById('events-list');
+  if (!events.length) { el.innerHTML = '<div class="empty-state">No events yet — add your first one above! 🎉</div>'; return; }
+  el.innerHTML = events.map(ev => `
+    <div class="item-row">
+      <div class="item-left">
+        <div class="dot" style="background:${memberColor(ev.person)}"></div>
+        <div>
+          <div class="item-title">${escapeHtml(ev.title)}</div>
+          <div class="item-sub">${ev.date}${ev.time ? ' at ' + ev.time : ''} · ${memberName(ev.person)}</div>
+        </div>
+      </div>
+      <button class="btn small danger" onclick="deleteItem('events','${ev.id}')">Remove</button>
+    </div>
+  `).join('');
+}
+
+// ---------- Chores ----------
+document.getElementById('chore-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  await api('/api/chores', 'POST', {
+    title: document.getElementById('chore-title').value,
+    person: document.getElementById('chore-person').value,
+    frequency: document.getElementById('chore-freq').value,
+    due: document.getElementById('chore-due').value,
+    done: false
+  });
+  e.target.reset();
+  loadChores();
+});
+
+async function loadChores() {
+  let chores = await api('/api/chores');
+  if (activeMemberFilter !== 'all') chores = chores.filter(c => c.person === activeMemberFilter);
+  const el = document.getElementById('chores-list');
+  if (!chores.length) { el.innerHTML = '<div class="empty-state">Nothing on the list yet — add a chore, study task, or dog day above! 🐶</div>'; return; }
+  el.innerHTML = chores.map(c => `
+    <div class="item-row">
+      <div class="item-left">
+        <div class="checkbox ${c.done?'done':''}" onclick="toggleChore('${c.id}', ${!c.done})"></div>
+        <div>
+          <div class="item-title ${c.done?'done-text':''}">${escapeHtml(c.title)}</div>
+          <div class="item-sub">${memberName(c.person)} · ${c.frequency}${c.due ? ' · due ' + c.due : ''}</div>
+        </div>
+      </div>
+      <button class="btn small danger" onclick="deleteItem('chores','${c.id}')">Remove</button>
+    </div>
+  `).join('');
+}
+async function toggleChore(id, done) {
+  await api('/api/chores/' + id, 'PUT', { done });
+  loadChores();
+}
+
+// ---------- Reminders ----------
+document.getElementById('reminder-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  await api('/api/reminders', 'POST', {
+    title: document.getElementById('reminder-title').value,
+    date: document.getElementById('reminder-date').value,
+    person: document.getElementById('reminder-person').value
+  });
+  e.target.reset();
+  loadReminders();
+});
+
+async function loadReminders() {
+  let reminders = await api('/api/reminders');
+  if (activeMemberFilter !== 'all') reminders = reminders.filter(r => r.person === activeMemberFilter);
+  const el = document.getElementById('reminders-list');
+  if (!reminders.length) { el.innerHTML = '<div class="empty-state">No reminders yet. Add one above! ⏰</div>'; return; }
+  el.innerHTML = reminders.map(r => `
+    <div class="item-row">
+      <div class="item-left">
+        <div class="dot" style="background:${memberColor(r.person)}"></div>
+        <div>
+          <div class="item-title">${escapeHtml(r.title)}</div>
+          <div class="item-sub">${r.date ? r.date + ' · ' : ''}${memberName(r.person)}</div>
+        </div>
+      </div>
+      <button class="btn small danger" onclick="deleteItem('reminders','${r.id}')">Remove</button>
+    </div>
+  `).join('');
+}
+
+// ---------- Lists ----------
+document.getElementById('list-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  await api('/api/lists', 'POST', {
+    name: document.getElementById('list-name').value,
+    items: []
+  });
+  e.target.reset();
+  loadLists();
+});
+
+async function loadLists() {
+  const lists = await api('/api/lists');
+  const el = document.getElementById('lists-container');
+  if (!lists.length) { el.innerHTML = '<div class="card"><div class="empty-state">No lists yet — create one above (like Groceries)! 🛒</div></div>'; return; }
+  el.innerHTML = lists.map(list => `
+    <div class="card list-block">
+      <h4>${escapeHtml(list.name)} <button class="btn small danger" style="float:right" onclick="deleteItem('lists','${list.id}')">Delete list</button></h4>
+      <form class="add-form" onsubmit="addListItem(event, '${list.id}')">
+        <input type="text" placeholder="Add an item…" required>
+        <button class="btn small" type="submit">Add</button>
+      </form>
+      <div>
+        ${(list.items||[]).map((item, idx) => `
+          <div class="item-row">
+            <div class="item-left">
+              <div class="checkbox ${item.done?'done':''}" onclick="toggleListItem('${list.id}', ${idx})"></div>
+              <div class="item-title ${item.done?'done-text':''}">${escapeHtml(item.text)}</div>
+            </div>
+            <button class="btn small danger" onclick="removeListItem('${list.id}', ${idx})">✕</button>
+          </div>
+        `).join('') || '<div class="empty-state">Empty list</div>'}
+      </div>
+    </div>
+  `).join('');
+}
+async function addListItem(e, listId) {
+  e.preventDefault();
+  const input = e.target.querySelector('input');
+  const lists = await api('/api/lists');
+  const list = lists.find(l => l.id === listId);
+  list.items.push({ text: input.value, done: false });
+  await api('/api/lists/' + listId, 'PUT', { items: list.items });
+  loadLists();
+}
+async function toggleListItem(listId, idx) {
+  const lists = await api('/api/lists');
+  const list = lists.find(l => l.id === listId);
+  list.items[idx].done = !list.items[idx].done;
+  await api('/api/lists/' + listId, 'PUT', { items: list.items });
+  loadLists();
+}
+async function removeListItem(listId, idx) {
+  const lists = await api('/api/lists');
+  const list = lists.find(l => l.id === listId);
+  list.items.splice(idx, 1);
+  await api('/api/lists/' + listId, 'PUT', { items: list.items });
+  loadLists();
+}
+
+// ---------- Files ----------
+document.getElementById('file-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  await api('/api/files', 'POST', {
+    name: document.getElementById('file-name').value,
+    link: document.getElementById('file-link').value,
+    person: document.getElementById('file-person').value
+  });
+  e.target.reset();
+  loadFiles();
+});
+
+async function loadFiles() {
+  const files = await api('/api/files');
+  const el = document.getElementById('files-list');
+  if (!files.length) { el.innerHTML = '<div class="empty-state">No shared files noted yet.</div>'; return; }
+  el.innerHTML = files.map(f => `
+    <div class="item-row">
+      <div class="item-left">
+        <div class="dot" style="background:${memberColor(f.person)}"></div>
+        <div>
+          <div class="item-title">${f.link ? `<a href="${escapeHtml(f.link)}" target="_blank">${escapeHtml(f.name)}</a>` : escapeHtml(f.name)}</div>
+          <div class="item-sub">Added by ${memberName(f.person)}</div>
+        </div>
+      </div>
+      <button class="btn small danger" onclick="deleteItem('files','${f.id}')">Remove</button>
+    </div>
+  `).join('');
+}
+
+async function deleteItem(resource, id) {
+  await api('/api/' + resource + '/' + id, 'DELETE');
+  loadAll();
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str || '';
+  return div.innerHTML;
+}
+
+function loadAll() {
+  loadEvents();
+  loadChores();
+  loadReminders();
+  loadLists();
+  loadFiles();
+}
+
+async function init() {
+  MEMBERS = await api('/api/members');
+  fillPersonSelects();
+  renderMemberFilters();
+  setGreeting();
+  loadWeather();
+  loadAll();
+}
+init();
+</script>
+</body>
+</html>

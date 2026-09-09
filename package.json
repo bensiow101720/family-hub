@@ -1,0 +1,12 @@
+{
+  "name": "family-hub",
+  "version": "1.0.0",
+  "description": "Private family scheduling app - calendar, weather, chores, reminders, notes, files",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
