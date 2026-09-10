@@ -127,15 +127,15 @@
   .view-toggle button.active { background: var(--gold-deep); color: var(--ink); border-color: var(--gold-deep); }
 
   /* ---------- Month grid ---------- */
-  .two-month-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .two-month-grid { display: flex; flex-wrap: wrap; gap: 24px; }
+  .month-block { flex: 1 1 320px; min-width: 300px; }
   .month-block h5 { text-align: center; font-family: 'Quicksand', sans-serif; font-weight: 700; margin-bottom: 8px; }
-  @media (max-width: 900px) { .two-month-grid { grid-template-columns: 1fr; } }
   .weekday-row, .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .weekday-row { margin-bottom: 6px; }
   .weekday-row div { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
   .day-cell {
     background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    min-height: 88px; padding: 6px 7px; cursor: pointer;
+    min-height: 128px; padding: 6px 7px; cursor: pointer;
     display: flex; flex-direction: column; gap: 3px;
   }
   .day-cell:hover { box-shadow: 0 4px 12px var(--shadow); }
@@ -328,6 +328,11 @@
           <label style="font-size:12.5px; color:var(--muted); font-weight:700; display:flex; align-items:center; gap:5px;">
             Ends <input type="date" id="event-end-date" title="Optional — for multi-day events like holidays">
           </label>
+          <select id="event-repeat">
+            <option value="none">Doesn't repeat</option>
+            <option value="weekly">Repeats weekly</option>
+            <option value="yearly">Repeats yearly</option>
+          </select>
           <select id="event-person"></select>
           <button class="btn" type="submit">Add</button>
         </form>
@@ -471,6 +476,30 @@ function memberName(id) { const m = MEMBERS.find(m => m.id === id); return m ? m
 function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
 function pad(n) { return n.toString().padStart(2, '0'); }
 function dateStr(y, m, d) { return `${y}-${pad(m + 1)}-${pad(d)}`; }
+function daysBetween(dsA, dsB) {
+  const [ay,am,ad] = dsA.split('-').map(Number);
+  const [by,bm,bd] = dsB.split('-').map(Number);
+  return Math.round((Date.UTC(by,bm-1,bd) - Date.UTC(ay,am-1,ad)) / 86400000);
+}
+// Does a (possibly recurring, possibly multi-day) event occur on date `ds`?
+function eventOccursOn(event, ds) {
+  const spanDays = event.endDate ? daysBetween(event.date, event.endDate) : 0;
+  if (!event.repeat || event.repeat === 'none') {
+    return ds >= event.date && ds <= (event.endDate || event.date);
+  }
+  const diff = daysBetween(event.date, ds);
+  if (diff < 0) return false;
+  if (event.repeat === 'weekly') return (diff % 7) <= spanDays;
+  if (event.repeat === 'yearly') {
+    const [ey, em, ed] = event.date.split('-').map(Number);
+    const [dy] = ds.split('-').map(Number);
+    if (dy < ey) return false;
+    const anniversaryThisYear = `${dy}-${pad(em)}-${pad(ed)}`;
+    const diffFromAnniversary = daysBetween(anniversaryThisYear, ds);
+    return diffFromAnniversary >= 0 && diffFromAnniversary <= spanDays;
+  }
+  return false;
+}
 // Display dates as dd/mm/yy (storage stays ISO yyyy-mm-dd for correct sorting/filtering)
 function fmtDate(iso) {
   if (!iso) return '';
@@ -481,6 +510,57 @@ function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.close)));
 document.querySelectorAll('.modal-backdrop').forEach(bd => bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); }));
+
+// ---------- Climate data for auto-weather (approximate monthly averages, °C) ----------
+const CLIMATE = {
+  copenhagen: [[3,-1],[3,-1],[6,1],[11,4],[16,8],[20,12],[22,14],[21,14],[18,11],[13,7],[8,3],[5,1]],
+  stockholm:  [[0,-4],[0,-4],[4,-2],[10,2],[16,7],[21,12],[23,14],[21,13],[16,10],[10,5],[5,1],[2,-2]],
+  tokyo:      [[10,2],[11,2],[14,5],[19,10],[23,15],[26,19],[30,23],[31,24],[27,21],[22,15],[17,9],[12,4]],
+  seoul:      [[1,-6],[4,-4],[10,1],[18,7],[23,13],[28,19],[29,22],[30,23],[26,17],[19,9],[11,2],[3,-4]],
+  athens:     [[13,6],[14,6],[16,8],[20,11],[25,15],[30,19],[33,22],[33,22],[29,18],[23,14],[18,10],[14,8]],
+  santorini:  [[14,10],[14,10],[16,11],[19,13],[23,17],[27,20],[28,23],[28,23],[26,20],[22,17],[19,14],[16,12]],
+  istanbul:   [[8,3],[9,3],[11,4],[16,8],[21,13],[26,17],[28,20],[28,20],[25,16],[20,12],[14,8],[10,5]],
+  barcelona:  [[13,6],[14,7],[16,8],[18,10],[21,14],[25,17],[28,20],[28,21],[25,18],[21,14],[16,10],[13,7]],
+  madrid:     [[9,2],[11,2],[15,4],[17,7],[21,10],[27,15],[32,18],[31,18],[26,14],[19,10],[13,5],[9,3]],
+  lisbon:     [[15,8],[16,8],[18,10],[19,11],[22,13],[26,16],[28,17],[28,18],[27,17],[22,14],[18,11],[15,9]],
+  porto:      [[14,5],[15,6],[17,7],[18,9],[20,11],[23,13],[25,14],[25,14],[24,13],[20,11],[16,8],[14,6]],
+  sydney:     [[26,19],[26,19],[25,17],[22,14],[19,11],[17,9],[16,8],[18,9],[20,11],[22,14],[24,16],[25,18]],
+  auckland:   [[23,16],[24,16],[22,15],[19,13],[17,10],[15,8],[14,7],[15,8],[16,9],[18,11],[20,13],[22,15]]
+};
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function monthsInRange(start, end) {
+  if (!start) return [];
+  const s = start.split('-').map(Number);
+  const e = (end || start).split('-').map(Number);
+  const months = [];
+  let y = s[0], m = s[1];
+  const endY = e[0], endM = e[1];
+  let guard = 0;
+  while ((y < endY || (y === endY && m <= endM)) && guard < 24) {
+    months.push({ y, m });
+    m++; if (m > 12) { m = 1; y++; }
+    guard++;
+  }
+  return months;
+}
+function computeAutoWeather(citiesStr, startDate, endDate) {
+  const cities = (citiesStr || '').split(',').map(c => c.trim()).filter(Boolean);
+  if (!cities.length) return 'Add cities above to see typical weather.';
+  if (!startDate) return 'Set trip dates above to see typical weather for that time of year.';
+  const months = monthsInRange(startDate, endDate);
+  const lines = [];
+  cities.forEach(city => {
+    const key = city.toLowerCase().replace(/[^a-z]/g, '');
+    const data = CLIMATE[key];
+    if (!data) { lines.push(`${city}: no climate data on file for this city yet.`); return; }
+    const monthLines = months.map(({ m }) => {
+      const [high, low] = data[m - 1];
+      return `${MONTH_NAMES[m - 1]} highs ~${high}°C / lows ~${low}°C`;
+    });
+    lines.push(`${city}: ${monthLines.join(', ')}`);
+  });
+  return lines.join('\n');
+}
 
 function fillPersonSelects() {
   ['event-person', 'chore-person', 'reminder-person', 'file-person'].forEach(sid => {
@@ -539,8 +619,8 @@ async function loadAllData() {
 
 function itemsForDate(dateString) {
   const items = [];
-  allEvents.filter(e => dateString >= e.date && dateString <= (e.endDate || e.date) && (activeMemberFilter==='all' || e.person===activeMemberFilter))
-    .forEach(e => items.push({ type: 'event', title: e.title, person: e.person, id: e.id, time: e.time, isRange: !!e.endDate, startDate: e.date, endDate: e.endDate }));
+  allEvents.filter(e => eventOccursOn(e, dateString) && (activeMemberFilter==='all' || e.person===activeMemberFilter))
+    .forEach(e => items.push({ type: 'event', title: e.title, person: e.person, id: e.id, time: e.time, isRange: !!e.endDate, startDate: e.date, endDate: e.endDate, repeat: e.repeat }));
   allChores.filter(c => c.due === dateString && (activeMemberFilter==='all' || c.person===activeMemberFilter))
     .forEach(c => items.push({ type: 'chore', title: c.title, person: c.person, id: c.id, done: c.done }));
   allReminders.filter(r => r.date === dateString && (activeMemberFilter==='all' || r.person===activeMemberFilter))
@@ -564,13 +644,13 @@ function renderSingleMonthGrid(y, m, gridId) {
   grid.innerHTML = cells.map(c => {
     if (c.otherMonth) return `<div class="day-cell other-month"><div class="day-num">${c.day}</div></div>`;
     const items = itemsForDate(c.ds);
-    const shown = items.slice(0, 3);
+    const shown = items.slice(0, 4);
     const isToday = c.ds === todayStr;
     return `
       <div class="day-cell ${isToday?'today':''} ${items.length?'has-items':''}" data-date="${c.ds}">
         <div class="day-num">${c.day}</div>
         ${shown.map(it => `<div class="day-item" style="background:${memberColor(it.person)}30; border-left:3px solid ${memberColor(it.person)}">${escapeHtml(it.title)}</div>`).join('')}
-        ${items.length > 3 ? `<div class="day-more">+${items.length - 3} more</div>` : ''}
+        ${items.length > 4 ? `<div class="day-more">+${items.length - 4} more</div>` : ''}
       </div>`;
   }).join('');
 
@@ -664,7 +744,7 @@ function renderDayModalBody() {
           ${it.type === 'chore' ? `<div class="checkbox ${it.done?'done':''}" onclick="toggleChore('${it.id}', ${!it.done})"></div>` : `<div class="dot" style="background:${memberColor(it.person)}"></div>`}
           <div>
             <div class="item-title ${it.done?'done-text':''}">${escapeHtml(it.title)}${it.time ? ' · ' + it.time : ''}</div>
-            <div class="item-sub">${it.type === 'chore' ? 'Chore' : it.type === 'reminder' ? 'Reminder' : 'Event'} · ${memberName(it.person)}${it.isRange ? ' · ' + fmtDate(it.startDate) + ' – ' + fmtDate(it.endDate) : ''}</div>
+            <div class="item-sub">${it.type === 'chore' ? 'Chore' : it.type === 'reminder' ? 'Reminder' : 'Event'} · ${memberName(it.person)}${it.isRange ? ' · ' + fmtDate(it.startDate) + ' – ' + fmtDate(it.endDate) : ''}${it.repeat && it.repeat !== 'none' ? ' · 🔁 ' + it.repeat : ''}</div>
           </div>
         </div>
         <div class="item-actions">
@@ -714,6 +794,11 @@ async function startInlineEdit(type, id) {
         <div class="row">
           <input type="date" id="edit-date-${id}" value="${item[dateField] || ''}">
           <select id="edit-person-${id}">${MEMBERS.map(m => `<option value="${m.id}" ${m.id===item.person?'selected':''}>${m.name}</option>`).join('')}</select>
+          ${type === 'event' ? `<select id="edit-repeat-${id}">
+            <option value="none" ${(!item.repeat||item.repeat==='none')?'selected':''}>Doesn't repeat</option>
+            <option value="weekly" ${item.repeat==='weekly'?'selected':''}>Repeats weekly</option>
+            <option value="yearly" ${item.repeat==='yearly'?'selected':''}>Repeats yearly</option>
+          </select>` : ''}
         </div>
         <div class="row">
           <button class="btn small" onclick="saveInlineEdit('${type}','${id}')">Save</button>
@@ -726,13 +811,19 @@ async function saveInlineEdit(type, id) {
   const dateField = type === 'chore' ? 'due' : 'date';
   const payload = { title: document.getElementById(`edit-title-${id}`).value, person: document.getElementById(`edit-person-${id}`).value };
   payload[dateField] = document.getElementById(`edit-date-${id}`).value;
+  if (type === 'event') payload.repeat = document.getElementById(`edit-repeat-${id}`).value;
   const resourceMap = { event: 'events', chore: 'chores', reminder: 'reminders' };
   await api('/api/' + resourceMap[type] + '/' + id, 'PUT', payload);
   await refreshEverything();
   renderDayModalBody();
 }
 async function deleteFromModal(type, id) {
-  if (!confirm('Delete this item?')) return;
+  const collectionMap = { event: allEvents, chore: allChores, reminder: allReminders };
+  const item = collectionMap[type].find(x => x.id === id);
+  const msg = (type === 'event' && item && item.repeat && item.repeat !== 'none')
+    ? 'This is a repeating event — deleting it removes the whole series, not just this occurrence. Continue?'
+    : 'Delete this item?';
+  if (!confirm(msg)) return;
   const resourceMap = { event: 'events', chore: 'chores', reminder: 'reminders' };
   await api('/api/' + resourceMap[type] + '/' + id, 'DELETE');
   await refreshEverything();
@@ -761,6 +852,7 @@ document.getElementById('event-form').addEventListener('submit', async e => {
     date: document.getElementById('event-date').value,
     endDate: endDate || undefined,
     time: document.getElementById('event-time').value,
+    repeat: document.getElementById('event-repeat').value,
     person: document.getElementById('event-person').value
   });
   e.target.reset();
@@ -951,11 +1043,15 @@ function openTripModal(id) {
     </div>
 
     <div class="info-grid">
-      <div class="info-box">
-        <div class="label">☀️ Weather (typical)</div>
-        <textarea id="trip-weather-${id}" placeholder="Add notes on weather/climate...">${escapeHtml(t.weatherInfo || '')}</textarea>
+      <div class="info-box" style="grid-column: 1 / -1;">
+        <div class="label">☀️ Typical weather (auto, based on cities & dates)</div>
+        <div id="trip-autoweather-${id}" style="font-size:13px; margin-top:4px; white-space:pre-line;">${escapeHtml(computeAutoWeather(t.cities, t.startDate, t.endDate))}</div>
       </div>
-      <div class="info-box">
+      <div class="info-box" style="grid-column: 1 / -1;">
+        <div class="label">📝 Additional weather notes (optional)</div>
+        <textarea id="trip-weather-${id}" placeholder="Any extra notes on weather/packing...">${escapeHtml(t.weatherInfo || '')}</textarea>
+      </div>
+      <div class="info-box" style="grid-column: 1 / -1;">
         <div class="label">🗺️ Things to see & do</div>
         <textarea id="trip-todo-${id}" placeholder="Add things to see and do...">${escapeHtml(t.thingsToDo || '')}</textarea>
       </div>
@@ -1008,6 +1104,15 @@ function openTripModal(id) {
     <button class="btn danger small" style="margin-top:16px;" onclick="deleteTrip('${id}')">Delete this trip</button>
   `;
   openModal('trip-modal');
+  function recomputeAutoWeather() {
+    const cities = document.getElementById(`trip-cities-${id}`).value;
+    const start = document.getElementById(`trip-start-${id}`).value;
+    const end = document.getElementById(`trip-end-${id}`).value;
+    document.getElementById(`trip-autoweather-${id}`).textContent = computeAutoWeather(cities, start, end);
+  }
+  ['trip-cities', 'trip-start', 'trip-end'].forEach(fieldPrefix => {
+    document.getElementById(`${fieldPrefix}-${id}`).addEventListener('input', recomputeAutoWeather);
+  });
 }
 async function saveTripInfo(id) {
   await api('/api/trips/' + id, 'PUT', {
@@ -1154,7 +1259,6 @@ async function init() {
       name: 'Denmark & Sweden Family Holiday',
       startDate: '2026-12-12', endDate: '2026-12-26',
       cities: 'Copenhagen, Stockholm',
-      weatherInfo: 'Copenhagen: highs ~4°C / lows ~0°C, damp and often overcast, ~7hrs daylight, chance of snow/rain — pack warm coats, scarves, gloves. Stockholm: colder, highs ~1°C / lows ~-2°C, ~6hrs daylight.',
       thingsToDo: 'Copenhagen: Tivoli Gardens Christmas Market, Nyhavn canal walk & Christmas market, Kongens Nytorv ice rink, Christiania Christmas Market. Stockholm: Skansen open-air museum Christmas market, Gamla Stan (Old Town) Christmas markets at Stortorget, Vasa Museum, ICEBAR Stockholm.',
       pros: [{ text: 'SQ flies direct SIN–CPH, ~13h45m, no layover' }],
       cons: [{ text: 'Very cold and short daylight hours in December' }],
@@ -1162,9 +1266,8 @@ async function init() {
     },
     {
       name: 'Tokyo & Seoul Adventure',
-      startDate: '', endDate: '',
+      startDate: '2026-12-12', endDate: '2026-12-26',
       cities: 'Tokyo, Seoul',
-      weatherInfo: '',
       thingsToDo: 'Tokyo: Senso-ji Temple in Asakusa, Shibuya Crossing & Sky, teamLab Planets/Borderless digital art, Akihabara for anime/games, Meiji Shrine, Tokyo Disneyland/DisneySea. Seoul: Gyeongbokgung Palace, Bukchon Hanok Village, Myeongdong shopping & street food, N Seoul Tower, Gwangjang Market food tour, Lotte World.',
       pros: [{ text: 'Two very different but complementary cultures in one trip' }],
       cons: [{ text: 'Requires a flight between Tokyo and Seoul, adding travel time' }],
@@ -1172,19 +1275,17 @@ async function init() {
     },
     {
       name: 'Greece & Turkey Explorer',
-      startDate: '', endDate: '',
+      startDate: '2026-12-12', endDate: '2026-12-26',
       cities: 'Athens, Santorini, Istanbul',
-      weatherInfo: '',
       thingsToDo: 'Greece: Acropolis & Parthenon in Athens, Santorini caldera sunsets, Plaka old town, Greek island-hopping (Mykonos/Santorini). Turkey: Hagia Sophia & Blue Mosque in Istanbul, Grand Bazaar, Cappadocia hot air balloon rides & fairy chimneys, Ephesus ancient ruins, Pamukkale thermal terraces.',
       pros: [{ text: 'Rich mix of ancient history, islands, and unique landscapes (Cappadocia)' }],
-      cons: [{ text: 'Long trip if covering both countries properly — 10-14 days recommended' }],
+      cons: [{ text: 'December is off-season — some island ferries/hotels may be limited' }],
       addToCalendar: false
     },
     {
       name: 'Spain & Portugal Getaway',
-      startDate: '', endDate: '',
+      startDate: '2026-12-12', endDate: '2026-12-26',
       cities: 'Barcelona, Madrid, Lisbon, Porto',
-      weatherInfo: '',
       thingsToDo: 'Spain: Sagrada Família & Park Güell in Barcelona, Prado Museum & Royal Palace in Madrid, flamenco in Seville, Alhambra in Granada. Portugal: Belém Tower & Jerónimos Monastery in Lisbon, Sintra day trip, Porto old town & Douro Valley wine tours, historic Ribeira district.',
       pros: [{ text: 'Great food and walkable historic old towns in every city' }],
       cons: [{ text: 'Intercity travel (train/flights) needed to cover both countries' }],
@@ -1192,11 +1293,10 @@ async function init() {
     },
     {
       name: 'Sydney & Auckland Trip',
-      startDate: '', endDate: '',
+      startDate: '2026-12-12', endDate: '2026-12-26',
       cities: 'Sydney, Auckland',
-      weatherInfo: '',
       thingsToDo: 'Sydney: Sydney Opera House tour, Harbour Bridge climb/walk, Bondi to Coogee coastal walk, Taronga Zoo, Blue Mountains day trip. Auckland: Auckland War Memorial Museum, Waiheke Island wine tours, Sky Tower, Bay of Islands day trip.',
-      pros: [{ text: 'Good flight connections and similar time zones, easy to combine' }],
+      pros: [{ text: "It's summer there in December — warm weather, long daylight hours" }],
       cons: [{ text: 'Long-haul flight from Singapore either way (~8h to Sydney)' }],
       addToCalendar: false
     }
@@ -1205,12 +1305,18 @@ async function init() {
     if (!existingNames.includes(seed.name)) {
       await api('/api/trips', 'POST', {
         name: seed.name, startDate: seed.startDate, endDate: seed.endDate, cities: seed.cities,
-        weatherInfo: seed.weatherInfo, thingsToDo: seed.thingsToDo,
+        weatherInfo: '', thingsToDo: seed.thingsToDo,
         flightEconomyPrice: '', flightBusinessPrice: '',
         pros: seed.pros, cons: seed.cons
       });
       if (seed.addToCalendar && seed.startDate) {
         await api('/api/events', 'POST', { title: seed.name, date: seed.startDate, endDate: seed.endDate, person: 'family' });
+      }
+    } else {
+      // Backfill dates/cities for trips created by an earlier version of this app that had blank dates
+      const existing = allTrips.find(t => t.name === seed.name);
+      if (existing && !existing.startDate) {
+        await api('/api/trips/' + existing.id, 'PUT', { startDate: seed.startDate, endDate: seed.endDate, cities: existing.cities || seed.cities });
       }
     }
   }
