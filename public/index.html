@@ -20,6 +20,7 @@
     --lavender: #CBB8DD;
     --blush: #E9B7B3;
     --shadow: rgba(74,66,56,0.10);
+    --sidebar-w: 68px;
   }
   * { box-sizing: border-box; }
   body {
@@ -29,15 +30,10 @@
     font-family: 'Nunito', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, .heading {
+  h1, h2, h3, h4, .heading {
     font-family: 'Quicksand', sans-serif;
     font-weight: 700;
     margin: 0;
-  }
-  .app {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 20px 20px 60px;
   }
   .card {
     background: var(--card);
@@ -55,366 +51,336 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 14px;
-    margin-bottom: 18px;
+    padding: 16px 20px 10px;
   }
-  .brand {
-    font-family: 'Quicksand', sans-serif;
-    font-weight: 700;
-    font-size: 24px;
-    color: var(--ink);
-  }
+  .brand { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 22px; }
   .weather-clock {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 10px 18px;
-    box-shadow: 0 4px 14px var(--shadow);
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 9px 16px; box-shadow: 0 4px 14px var(--shadow);
   }
   .weather-clock .seg { text-align: right; }
-  .weather-clock .label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
-  .weather-clock .value { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 17px; }
-  .weather-clock .icon { font-size: 26px; }
+  .weather-clock .label { font-size: 10.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+  .weather-clock .value { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 16px; }
+  .weather-clock .icon { font-size: 24px; }
+
+  /* ---------- Layout: sidebar + content ---------- */
+  .layout { display: flex; align-items: flex-start; }
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
+    position: sticky;
+    top: 16px;
+  }
+  .sidebar button {
+    width: 100%;
+    aspect-ratio: 1;
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 16px;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .sidebar button.active { background: var(--gold-deep); border-color: var(--gold-deep); }
+  .sidebar button .tip {
+    position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+    background: var(--ink); color: white; font-size: 12px; font-family: 'Quicksand', sans-serif; font-weight: 700;
+    padding: 4px 10px; border-radius: 8px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s;
+    z-index: 20;
+  }
+  .sidebar button:hover .tip { opacity: 1; }
+  .main-content { flex: 1; min-width: 0; padding: 8px 20px 60px 8px; }
 
   /* ---------- Member chips ---------- */
-  .members {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
+  .members { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
   .chip {
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 7px 16px;
-    font-weight: 700;
-    font-family: 'Quicksand', sans-serif;
-    font-size: 14px;
-    cursor: pointer;
-    background: var(--card);
-    transition: all 0.15s ease;
-    user-select: none;
+    border: 1px solid var(--border); border-radius: 999px; padding: 7px 16px;
+    font-weight: 700; font-family: 'Quicksand', sans-serif; font-size: 14px;
+    cursor: pointer; background: var(--card); user-select: none;
   }
   .chip.active { color: var(--ink); border-color: transparent; }
 
   /* ---------- Calendar header ---------- */
-  .cal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
+  .cal-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
   .cal-nav { display: flex; align-items: center; gap: 10px; }
   .cal-nav button {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--card);
-    cursor: pointer;
-    font-size: 16px;
-    font-family: 'Quicksand', sans-serif;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--ink);
+    width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+    background: var(--card); cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center; color: var(--ink);
   }
   .cal-nav button:hover { background: var(--gold); border-color: var(--gold); }
   .cal-title { font-size: 22px; min-width: 190px; text-align: center; }
   .view-toggle { display: flex; gap: 6px; }
   .view-toggle button {
-    border: 1px solid var(--border);
-    background: var(--card);
-    border-radius: 999px;
-    padding: 7px 16px;
-    font-family: 'Quicksand', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    cursor: pointer;
-    color: var(--ink);
+    border: 1px solid var(--border); background: var(--card); border-radius: 999px; padding: 7px 16px;
+    font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; color: var(--ink);
   }
   .view-toggle button.active { background: var(--gold-deep); color: var(--ink); border-color: var(--gold-deep); }
 
   /* ---------- Month grid ---------- */
-  .weekday-row, .month-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
-  }
+  .weekday-row, .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .weekday-row { margin-bottom: 6px; }
-  .weekday-row div {
-    text-align: center;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
+  .weekday-row div { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
   .day-cell {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    min-height: 88px;
-    padding: 6px 7px;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    transition: box-shadow 0.15s ease;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    min-height: 88px; padding: 6px 7px; cursor: pointer;
+    display: flex; flex-direction: column; gap: 3px;
   }
   .day-cell:hover { box-shadow: 0 4px 12px var(--shadow); }
   .day-cell.other-month { opacity: 0.35; }
   .day-cell.today { border: 2px solid var(--gold-deep); }
   .day-num { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 14px; }
-  .day-item {
-    font-size: 10.5px;
-    font-weight: 700;
-    padding: 2px 5px;
-    border-radius: 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--ink);
-  }
+  .day-item { font-size: 10.5px; font-weight: 700; padding: 2px 5px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .day-more { font-size: 10px; color: var(--muted); font-weight: 700; }
 
+  @media (max-width: 640px) {
+    .layout { flex-direction: column; }
+    .sidebar {
+      position: fixed; bottom: 0; left: 0; right: 0; width: 100%; flex-direction: row;
+      background: var(--card); border-top: 1px solid var(--border); z-index: 30; padding: 6px 8px;
+      box-shadow: 0 -4px 14px var(--shadow); top: auto;
+    }
+    .sidebar button { aspect-ratio: 1; font-size: 19px; border-radius: 12px; }
+    .sidebar button .tip { display: none; }
+    .main-content { padding: 8px 12px 90px; width: 100%; }
+    .day-cell { aspect-ratio: 1; min-height: 0; }
+    .day-item { display: none; }
+    .day-cell.has-items::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--gold-deep); margin-top: auto; }
+    .brand { font-size: 18px; }
+  }
+
   /* ---------- Year grid ---------- */
-  .year-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 14px;
-  }
-  .mini-month {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 12px;
-    cursor: pointer;
-  }
+  .year-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .mini-month { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 12px; cursor: pointer; }
   .mini-month:hover { box-shadow: 0 4px 12px var(--shadow); }
   .mini-month h4 { font-size: 14px; margin-bottom: 8px; text-align: center; }
   .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
   .mini-day { font-size: 9px; text-align: center; padding: 2px 0; border-radius: 4px; color: var(--muted); position: relative; }
-  .mini-day.has-items::after {
-    content: '';
-    display: block;
-    width: 4px; height: 4px;
-    border-radius: 50%;
-    background: var(--gold-deep);
-    margin: 1px auto 0;
-  }
+  .mini-day.has-items::after { content: ''; display: block; width: 4px; height: 4px; border-radius: 50%; background: var(--gold-deep); margin: 1px auto 0; }
   .mini-day.other-month { opacity: 0.3; }
 
-  /* ---------- Tabs (secondary) ---------- */
-  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 20px 0 14px; }
-  .tab-btn {
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 9px 15px;
-    font-family: 'Quicksand', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    background: var(--card);
-    cursor: pointer;
-    color: var(--ink);
-  }
-  .tab-btn.active { background: var(--gold-deep); color: var(--ink); border-color: var(--gold-deep); }
   .panel { display: none; }
   .panel.active { display: block; }
+  .section-title { font-size: 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 
-  .section-title { font-size: 18px; margin-bottom: 12px; }
-  .item-row {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    padding: 11px 13px; border: 1px solid var(--border); border-radius: 12px;
-    margin-bottom: 9px; background: var(--beige);
-  }
-  .item-left { display: flex; align-items: center; gap: 10px; }
+  .item-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 13px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 9px; background: var(--beige); }
+  .item-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
   .item-title { font-weight: 700; }
   .item-sub { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn { border: none; background: none; cursor: pointer; font-size: 15px; padding: 4px 6px; border-radius: 8px; }
+  .icon-btn:hover { background: var(--border); }
   .empty-state { text-align: center; padding: 26px 10px; color: var(--muted); font-weight: 700; font-family: 'Quicksand', sans-serif; }
 
-  .btn {
-    border: none; border-radius: 999px; padding: 10px 20px;
-    font-family: 'Quicksand', sans-serif; font-weight: 700; cursor: pointer;
-    background: var(--gold-deep); color: var(--ink);
-  }
+  .btn { border: none; border-radius: 999px; padding: 10px 20px; font-family: 'Quicksand', sans-serif; font-weight: 700; cursor: pointer; background: var(--gold-deep); color: var(--ink); }
   .btn.small { padding: 6px 14px; font-size: 13px; }
   .btn.danger { background: var(--blush); color: var(--ink); }
+  .btn.ghost { background: var(--card); border: 1px solid var(--border); }
 
   form.add-form { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
-  input, select {
-    font-family: 'Nunito', sans-serif; font-weight: 600;
-    border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 14px;
-    background: var(--card); color: var(--ink);
+  input, select, textarea {
+    font-family: 'Nunito', sans-serif; font-weight: 600; border: 1px solid var(--border); border-radius: 10px;
+    padding: 9px 12px; font-size: 14px; background: var(--card); color: var(--ink);
   }
   input[type="text"] { flex: 1; min-width: 140px; }
+  textarea { width: 100%; resize: vertical; min-height: 70px; }
 
-  .checkbox {
-    width: 21px; height: 21px; border: 2px solid var(--border); border-radius: 6px;
-    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-    flex-shrink: 0; background: var(--card);
-  }
+  .checkbox { width: 21px; height: 21px; border: 2px solid var(--border); border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--card); }
   .checkbox.done { background: var(--sage); border-color: var(--sage); }
   .checkbox.done::after { content: "✓"; color: white; font-weight: 800; font-size: 13px; }
   .done-text { text-decoration: line-through; opacity: 0.55; }
 
   .list-block { margin-bottom: 20px; }
-  .list-block h4 { font-family: 'Quicksand', sans-serif; font-size: 16px; margin-bottom: 8px; }
+  .list-block h4 { font-size: 16px; margin-bottom: 8px; }
 
-  /* ---------- Day modal ---------- */
-  .modal-backdrop {
-    display: none; position: fixed; inset: 0; background: rgba(74,66,56,0.35);
-    align-items: center; justify-content: center; z-index: 50; padding: 16px;
-  }
+  /* ---------- Modal (shared: day modal + edit forms) ---------- */
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(74,66,56,0.35); align-items: center; justify-content: center; z-index: 50; padding: 16px; }
   .modal-backdrop.open { display: flex; }
-  .modal {
-    background: var(--card); border-radius: 20px; padding: 22px; max-width: 440px; width: 100%;
-    max-height: 85vh; overflow-y: auto;
-  }
+  .modal { background: var(--card); border-radius: 20px; padding: 22px; max-width: 460px; width: 100%; max-height: 85vh; overflow-y: auto; }
+  .modal.wide { max-width: 700px; }
   .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   .modal-close { border: none; background: none; font-size: 20px; cursor: pointer; color: var(--muted); }
+  .edit-form { display: flex; flex-direction: column; gap: 8px; }
+  .edit-form .row { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  @media (max-width: 640px) {
-    .brand { font-size: 20px; }
-    .app { padding: 14px 10px 50px; }
-    .day-cell { min-height: 66px; }
-    .cal-title { font-size: 17px; min-width: 140px; }
+  /* ---------- Mic button ---------- */
+  .mic-btn {
+    position: fixed; right: 20px; bottom: 20px; width: 58px; height: 58px; border-radius: 50%;
+    background: var(--gold-deep); border: none; font-size: 24px; cursor: pointer; box-shadow: 0 6px 16px var(--shadow); z-index: 40;
   }
+  .mic-btn.listening { background: var(--blush); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+  @media (max-width: 640px) { .mic-btn { bottom: 76px; } }
+
+  /* ---------- Trips ---------- */
+  .trip-card { cursor: pointer; }
+  .trip-dates { color: var(--muted); font-weight: 700; font-size: 13px; }
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 10px; margin: 12px 0; }
+  .info-box { background: var(--beige); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .info-box .label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+  .proscons-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .proscons-col h4 { margin-bottom: 8px; }
+  @media (max-width: 600px) { .proscons-cols { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
-<div class="app">
 
-  <div class="topbar">
-    <div class="brand">🏡 Siow Hub</div>
-    <div class="weather-clock">
-      <span class="icon" id="weather-icon">🌤️</span>
-      <div class="seg">
-        <div class="label">Singapore</div>
-        <div class="value" id="weather-temp">--°C</div>
+<div class="topbar">
+  <div class="brand">🏡 Siow Hub</div>
+  <div class="weather-clock">
+    <span class="icon" id="weather-icon">🌤️</span>
+    <div class="seg">
+      <div class="label">Singapore</div>
+      <div class="value" id="weather-temp">--°C</div>
+    </div>
+    <div class="seg">
+      <div class="label" id="clock-date">--</div>
+      <div class="value" id="clock-time">--:--</div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar" id="sidebar">
+    <button class="active" data-panel="calendar">🏠<span class="tip">Calendar</span></button>
+    <button data-panel="chores">🧹<span class="tip">Chores & Planning</span></button>
+    <button data-panel="reminders">⏰<span class="tip">Reminders</span></button>
+    <button data-panel="lists">📝<span class="tip">Lists</span></button>
+    <button data-panel="trips">🌍<span class="tip">Trips (Pros & Cons)</span></button>
+    <button data-panel="files">📁<span class="tip">Files</span></button>
+  </nav>
+
+  <div class="main-content">
+
+    <div class="members" id="member-filters"></div>
+
+    <!-- CALENDAR PANEL -->
+    <div class="panel active" id="panel-calendar">
+      <div class="card">
+        <div class="cal-header">
+          <div class="cal-nav">
+            <button id="prev-btn">‹</button>
+            <div class="cal-title" id="cal-title"></div>
+            <button id="next-btn">›</button>
+          </div>
+          <div class="view-toggle">
+            <button id="month-view-btn" class="active">Month</button>
+            <button id="year-view-btn">Year</button>
+          </div>
+        </div>
+        <div id="month-view">
+          <div class="weekday-row">
+            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+          </div>
+          <div class="month-grid" id="month-grid"></div>
+        </div>
+        <div id="year-view" style="display:none">
+          <div class="year-grid" id="year-grid"></div>
+        </div>
       </div>
-      <div class="seg">
-        <div class="label" id="clock-date">--</div>
-        <div class="value" id="clock-time">--:--</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="members" id="member-filters"></div>
-
-  <div class="card">
-    <div class="cal-header">
-      <div class="cal-nav">
-        <button id="prev-btn">‹</button>
-        <div class="cal-title" id="cal-title"></div>
-        <button id="next-btn">›</button>
-      </div>
-      <div class="view-toggle">
-        <button id="month-view-btn" class="active">Month</button>
-        <button id="year-view-btn">Year</button>
+      <div class="card">
+        <div class="section-title">➕ Add an event or appointment</div>
+        <form class="add-form" id="event-form">
+          <input type="text" id="event-title" placeholder="What's happening?" required>
+          <input type="date" id="event-date" required>
+          <input type="time" id="event-time">
+          <label style="font-size:12.5px; color:var(--muted); font-weight:700; display:flex; align-items:center; gap:5px;">
+            Ends <input type="date" id="event-end-date" title="Optional — for multi-day events like holidays">
+          </label>
+          <select id="event-person"></select>
+          <button class="btn" type="submit">Add</button>
+        </form>
       </div>
     </div>
 
-    <div id="month-view">
-      <div class="weekday-row">
-        <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+    <!-- CHORES PANEL -->
+    <div class="panel" id="panel-chores">
+      <div class="card">
+        <div class="section-title">🧹 Add a chore, study task, or dog-grooming reminder</div>
+        <form class="add-form" id="chore-form">
+          <input type="text" id="chore-title" placeholder="e.g. Walk the dog, Study for maths test" required>
+          <select id="chore-person"></select>
+          <select id="chore-freq">
+            <option value="once">One-time</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+          </select>
+          <input type="date" id="chore-due">
+          <button class="btn" type="submit">Add</button>
+        </form>
       </div>
-      <div class="month-grid" id="month-grid"></div>
+      <div class="card">
+        <div class="section-title">✅ To Do</div>
+        <div id="chores-list"></div>
+      </div>
     </div>
 
-    <div id="year-view" style="display:none">
-      <div class="year-grid" id="year-grid"></div>
+    <!-- REMINDERS PANEL -->
+    <div class="panel" id="panel-reminders">
+      <div class="card">
+        <div class="section-title">⏰ Add a reminder</div>
+        <form class="add-form" id="reminder-form">
+          <input type="text" id="reminder-title" placeholder="Remind us to…" required>
+          <input type="date" id="reminder-date">
+          <select id="reminder-person"></select>
+          <button class="btn" type="submit">Add</button>
+        </form>
+      </div>
+      <div class="card">
+        <div class="section-title">📋 Reminders</div>
+        <div id="reminders-list"></div>
+      </div>
     </div>
+
+    <!-- LISTS PANEL -->
+    <div class="panel" id="panel-lists">
+      <div class="card">
+        <div class="section-title">📝 Start a new list</div>
+        <form class="add-form" id="list-form">
+          <input type="text" id="list-name" placeholder="List name (e.g. Groceries)" required>
+          <button class="btn" type="submit">Create list</button>
+        </form>
+      </div>
+      <div id="lists-container"></div>
+    </div>
+
+    <!-- TRIPS PANEL -->
+    <div class="panel" id="panel-trips">
+      <div class="card">
+        <div class="section-title">🌍 Start a new trip (Pros & Cons)</div>
+        <form class="add-form" id="trip-form">
+          <input type="text" id="trip-name" placeholder="Trip name (e.g. Denmark & Sweden Holiday)" required>
+          <input type="date" id="trip-start" required>
+          <input type="date" id="trip-end" required>
+          <button class="btn" type="submit">Create trip</button>
+        </form>
+      </div>
+      <div id="trips-container"></div>
+    </div>
+
+    <!-- FILES PANEL -->
+    <div class="panel" id="panel-files">
+      <div class="card">
+        <div class="section-title">📁 Shared files</div>
+        <p style="font-weight:600; color:var(--muted); margin-top:-6px;">Note a link, doc name, or where a shared file lives (e.g. a shared photo album link).</p>
+        <form class="add-form" id="file-form">
+          <input type="text" id="file-name" placeholder="File or photo name" required>
+          <input type="text" id="file-link" placeholder="Link (optional)">
+          <select id="file-person"></select>
+          <button class="btn" type="submit">Add</button>
+        </form>
+      </div>
+      <div class="card"><div id="files-list"></div></div>
+    </div>
+
   </div>
-
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="chores">🧹 Chores & Planning</button>
-    <button class="tab-btn" data-tab="reminders">⏰ Reminders</button>
-    <button class="tab-btn" data-tab="lists">📝 Lists</button>
-    <button class="tab-btn" data-tab="files">📁 Files</button>
-  </div>
-
-  <div class="panel active" id="panel-chores">
-    <div class="card">
-      <div class="section-title">Add a chore, study task, or dog-grooming reminder</div>
-      <form class="add-form" id="chore-form">
-        <input type="text" id="chore-title" placeholder="e.g. Walk the dog, Study for maths test" required>
-        <select id="chore-person"></select>
-        <select id="chore-freq">
-          <option value="once">One-time</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-        </select>
-        <input type="date" id="chore-due">
-        <button class="btn" type="submit">Add</button>
-      </form>
-    </div>
-    <div class="card">
-      <div class="section-title">To Do</div>
-      <div id="chores-list"></div>
-    </div>
-  </div>
-
-  <div class="panel" id="panel-reminders">
-    <div class="card">
-      <div class="section-title">Add a reminder</div>
-      <form class="add-form" id="reminder-form">
-        <input type="text" id="reminder-title" placeholder="Remind us to…" required>
-        <input type="date" id="reminder-date">
-        <select id="reminder-person"></select>
-        <button class="btn" type="submit">Add</button>
-      </form>
-    </div>
-    <div class="card">
-      <div class="section-title">Reminders</div>
-      <div id="reminders-list"></div>
-    </div>
-  </div>
-
-  <div class="panel" id="panel-lists">
-    <div class="card">
-      <div class="section-title">Start a new list</div>
-      <form class="add-form" id="list-form">
-        <input type="text" id="list-name" placeholder="List name (e.g. Groceries)" required>
-        <button class="btn" type="submit">Create list</button>
-      </form>
-    </div>
-    <div id="lists-container"></div>
-  </div>
-
-  <div class="panel" id="panel-files">
-    <div class="card">
-      <div class="section-title">Shared files</div>
-      <p style="font-weight:600; color:var(--muted); margin-top:-6px;">Note a link, doc name, or where a shared file lives (e.g. a shared photo album link).</p>
-      <form class="add-form" id="file-form">
-        <input type="text" id="file-name" placeholder="File or photo name" required>
-        <input type="text" id="file-link" placeholder="Link (optional)">
-        <select id="file-person"></select>
-        <button class="btn" type="submit">Add</button>
-      </form>
-    </div>
-    <div class="card">
-      <div id="files-list"></div>
-    </div>
-  </div>
-
-  <!-- Add event form, always available -->
-  <div class="card">
-    <div class="section-title">Add an event or appointment</div>
-    <form class="add-form" id="event-form">
-      <input type="text" id="event-title" placeholder="What's happening?" required>
-      <input type="date" id="event-date" required>
-      <input type="time" id="event-time">
-      <label style="font-size:12.5px; color:var(--muted); font-weight:700; display:flex; align-items:center; gap:5px;">
-        Ends <input type="date" id="event-end-date" title="Optional — for multi-day events like holidays">
-      </label>
-      <select id="event-person"></select>
-      <button class="btn" type="submit">Add</button>
-    </form>
-  </div>
-
 </div>
 
 <!-- Day detail modal -->
@@ -422,18 +388,42 @@
   <div class="modal">
     <div class="modal-header">
       <h3 id="modal-date-title"></h3>
-      <button class="modal-close" id="modal-close">✕</button>
+      <button class="modal-close" data-close="day-modal">✕</button>
     </div>
     <div id="modal-body"></div>
   </div>
 </div>
+
+<!-- Trip detail modal -->
+<div class="modal-backdrop" id="trip-modal">
+  <div class="modal wide">
+    <div class="modal-header">
+      <h3 id="trip-modal-title"></h3>
+      <button class="modal-close" data-close="trip-modal">✕</button>
+    </div>
+    <div id="trip-modal-body"></div>
+  </div>
+</div>
+
+<!-- Voice quick-add modal -->
+<div class="modal-backdrop" id="voice-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🎤 Add by voice</h3>
+      <button class="modal-close" data-close="voice-modal">✕</button>
+    </div>
+    <div id="voice-modal-body"></div>
+  </div>
+</div>
+
+<button class="mic-btn" id="mic-btn" title="Add by voice">🎤</button>
 
 <script>
 let MEMBERS = [];
 let activeMemberFilter = 'all';
 let viewDate = new Date();
 let currentView = 'month';
-let allEvents = [], allChores = [], allReminders = [];
+let allEvents = [], allChores = [], allReminders = [], allTrips = [];
 
 async function api(path, method, body) {
   const opts = { method: method || 'GET', headers: { 'Content-Type': 'application/json' } };
@@ -447,6 +437,16 @@ function memberName(id) { const m = MEMBERS.find(m => m.id === id); return m ? m
 function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
 function pad(n) { return n.toString().padStart(2, '0'); }
 function dateStr(y, m, d) { return `${y}-${pad(m + 1)}-${pad(d)}`; }
+// Display dates as dd/mm/yy (storage stays ISO yyyy-mm-dd for correct sorting/filtering)
+function fmtDate(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y.slice(2)}`;
+}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.close)));
+document.querySelectorAll('.modal-backdrop').forEach(bd => bd.addEventListener('click', e => { if (e.target === bd) bd.classList.remove('open'); }));
 
 function fillPersonSelects() {
   ['event-person', 'chore-person', 'reminder-person', 'file-person'].forEach(sid => {
@@ -466,6 +466,16 @@ function renderMemberFilters() {
     chip.addEventListener('click', () => { activeMemberFilter = chip.dataset.id; renderMemberFilters(); renderCurrentView(); });
   });
 }
+
+// ---------- Sidebar navigation ----------
+document.querySelectorAll('#sidebar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.panel).classList.add('active');
+  });
+});
 
 // ---------- Clock & Weather (Singapore) ----------
 function updateClock() {
@@ -488,8 +498,8 @@ function loadWeather() {
 
 // ---------- Data loading ----------
 async function loadAllData() {
-  [allEvents, allChores, allReminders] = await Promise.all([
-    api('/api/events'), api('/api/chores'), api('/api/reminders')
+  [allEvents, allChores, allReminders, allTrips] = await Promise.all([
+    api('/api/events'), api('/api/chores'), api('/api/reminders'), api('/api/trips')
   ]);
 }
 
@@ -525,7 +535,7 @@ function renderMonth() {
     const shown = items.slice(0, 3);
     const isToday = c.ds === todayStr;
     return `
-      <div class="day-cell ${isToday?'today':''}" data-date="${c.ds}">
+      <div class="day-cell ${isToday?'today':''} ${items.length?'has-items':''}" data-date="${c.ds}">
         <div class="day-num">${c.day}</div>
         ${shown.map(it => `<div class="day-item" style="background:${memberColor(it.person)}30; border-left:3px solid ${memberColor(it.person)}">${escapeHtml(it.title)}</div>`).join('')}
         ${items.length > 3 ? `<div class="day-more">+${items.length - 3} more</div>` : ''}
@@ -557,16 +567,11 @@ function renderYear() {
   }
   yearGrid.innerHTML = html;
   yearGrid.querySelectorAll('.mini-month').forEach(el => {
-    el.addEventListener('click', () => {
-      viewDate = new Date(y, parseInt(el.dataset.month), 1);
-      setView('month');
-    });
+    el.addEventListener('click', () => { viewDate = new Date(y, parseInt(el.dataset.month), 1); setView('month'); });
   });
 }
 
-function renderCurrentView() {
-  if (currentView === 'month') renderMonth(); else renderYear();
-}
+function renderCurrentView() { if (currentView === 'month') renderMonth(); else renderYear(); }
 
 function setView(view) {
   currentView = view;
@@ -576,57 +581,126 @@ function setView(view) {
   document.getElementById('year-view-btn').classList.toggle('active', view === 'year');
   renderCurrentView();
 }
-
 document.getElementById('month-view-btn').addEventListener('click', () => setView('month'));
 document.getElementById('year-view-btn').addEventListener('click', () => setView('year'));
 document.getElementById('prev-btn').addEventListener('click', () => {
-  if (currentView === 'month') viewDate.setMonth(viewDate.getMonth() - 1);
-  else viewDate.setFullYear(viewDate.getFullYear() - 1);
+  if (currentView === 'month') viewDate.setMonth(viewDate.getMonth() - 1); else viewDate.setFullYear(viewDate.getFullYear() - 1);
   renderCurrentView();
 });
 document.getElementById('next-btn').addEventListener('click', () => {
-  if (currentView === 'month') viewDate.setMonth(viewDate.getMonth() + 1);
-  else viewDate.setFullYear(viewDate.getFullYear() + 1);
+  if (currentView === 'month') viewDate.setMonth(viewDate.getMonth() + 1); else viewDate.setFullYear(viewDate.getFullYear() + 1);
   renderCurrentView();
 });
 
-// ---------- Day modal ----------
+// ---------- Day modal (with edit + delete) ----------
+let currentModalDate = null;
 function openDayModal(ds) {
-  const items = itemsForDate(ds);
-  document.getElementById('modal-date-title').textContent = new Date(ds + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  currentModalDate = ds;
+  document.getElementById('modal-date-title').textContent = new Date(ds + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: '2-digit', year: '2-digit' });
+  renderDayModalBody();
+  document.getElementById('event-date').value = ds;
+  openModal('day-modal');
+}
+function renderDayModalBody() {
+  const items = itemsForDate(currentModalDate);
   const body = document.getElementById('modal-body');
-  if (!items.length) {
-    body.innerHTML = '<div class="empty-state">Nothing planned yet for this day.</div>';
-  } else {
-    body.innerHTML = items.map(it => `
-      <div class="item-row">
+  const listHtml = !items.length
+    ? '<div class="empty-state">Nothing planned yet for this day.</div>'
+    : items.map(it => `
+      <div class="item-row" id="row-${it.type}-${it.id}">
         <div class="item-left">
-          <div class="dot" style="background:${memberColor(it.person)}"></div>
+          ${it.type === 'chore' ? `<div class="checkbox ${it.done?'done':''}" onclick="toggleChore('${it.id}', ${!it.done})"></div>` : `<div class="dot" style="background:${memberColor(it.person)}"></div>`}
           <div>
-            <div class="item-title">${escapeHtml(it.title)}${it.time ? ' · ' + it.time : ''}</div>
-            <div class="item-sub">${it.type === 'chore' ? 'Chore' : it.type === 'reminder' ? 'Reminder' : 'Event'} · ${memberName(it.person)}${it.isRange ? ' · ' + it.startDate + ' to ' + it.endDate : ''}</div>
+            <div class="item-title ${it.done?'done-text':''}">${escapeHtml(it.title)}${it.time ? ' · ' + it.time : ''}</div>
+            <div class="item-sub">${it.type === 'chore' ? 'Chore' : it.type === 'reminder' ? 'Reminder' : 'Event'} · ${memberName(it.person)}${it.isRange ? ' · ' + fmtDate(it.startDate) + ' – ' + fmtDate(it.endDate) : ''}</div>
           </div>
+        </div>
+        <div class="item-actions">
+          <button class="icon-btn" onclick="startInlineEdit('${it.type}','${it.id}')" title="Edit">✏️</button>
+          <button class="icon-btn" onclick="deleteFromModal('${it.type}','${it.id}')" title="Delete">🗑️</button>
         </div>
       </div>
     `).join('');
-  }
-  document.getElementById('event-date').value = ds;
-  document.getElementById('day-modal').classList.add('open');
-}
-document.getElementById('modal-close').addEventListener('click', () => document.getElementById('day-modal').classList.remove('open'));
-document.getElementById('day-modal').addEventListener('click', e => { if (e.target.id === 'day-modal') e.currentTarget.classList.remove('open'); });
 
-// ---------- Tabs ----------
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  body.innerHTML = listHtml + `
+    <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+      <div style="font-weight:700; margin-bottom:8px; font-family:'Quicksand',sans-serif;">➕ Add for this day</div>
+      <form class="add-form" id="quick-add-form">
+        <select id="quick-add-type" style="min-width:110px;">
+          <option value="event">Event</option>
+          <option value="chore">Chore</option>
+          <option value="reminder">Reminder</option>
+        </select>
+        <input type="text" id="quick-add-title" placeholder="What is it?" required>
+        <select id="quick-add-person"></select>
+        <button class="btn small" type="submit">Add</button>
+      </form>
+    </div>
+  `;
+  document.getElementById('quick-add-person').innerHTML = MEMBERS.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  document.getElementById('quick-add-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const type = document.getElementById('quick-add-type').value;
+    const title = document.getElementById('quick-add-title').value;
+    const person = document.getElementById('quick-add-person').value;
+    const resourceMap = { event: ['events', { title, date: currentModalDate, person }], chore: ['chores', { title, person, frequency: 'once', due: currentModalDate, done: false }], reminder: ['reminders', { title, date: currentModalDate, person }] };
+    const [resource, payload] = resourceMap[type];
+    await api('/api/' + resource, 'POST', payload);
+    await refreshEverything();
+    renderDayModalBody();
   });
-});
+}
+async function startInlineEdit(type, id) {
+  const collectionMap = { event: allEvents, chore: allChores, reminder: allReminders };
+  const item = collectionMap[type].find(x => x.id === id);
+  const row = document.getElementById(`row-${type}-${id}`);
+  const dateField = type === 'chore' ? 'due' : 'date';
+  row.outerHTML = `
+    <div class="item-row" style="flex-direction:column; align-items:stretch;" id="row-${type}-${id}">
+      <div class="edit-form">
+        <input type="text" id="edit-title-${id}" value="${escapeHtml(item.title)}">
+        <div class="row">
+          <input type="date" id="edit-date-${id}" value="${item[dateField] || ''}">
+          <select id="edit-person-${id}">${MEMBERS.map(m => `<option value="${m.id}" ${m.id===item.person?'selected':''}>${m.name}</option>`).join('')}</select>
+        </div>
+        <div class="row">
+          <button class="btn small" onclick="saveInlineEdit('${type}','${id}')">Save</button>
+          <button class="btn small ghost" onclick="renderDayModalBody()">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+}
+async function saveInlineEdit(type, id) {
+  const dateField = type === 'chore' ? 'due' : 'date';
+  const payload = { title: document.getElementById(`edit-title-${id}`).value, person: document.getElementById(`edit-person-${id}`).value };
+  payload[dateField] = document.getElementById(`edit-date-${id}`).value;
+  const resourceMap = { event: 'events', chore: 'chores', reminder: 'reminders' };
+  await api('/api/' + resourceMap[type] + '/' + id, 'PUT', payload);
+  await refreshEverything();
+  renderDayModalBody();
+}
+async function deleteFromModal(type, id) {
+  if (!confirm('Delete this item?')) return;
+  const resourceMap = { event: 'events', chore: 'chores', reminder: 'reminders' };
+  await api('/api/' + resourceMap[type] + '/' + id, 'DELETE');
+  await refreshEverything();
+  renderDayModalBody();
+}
+async function toggleChore(id, done) {
+  await api('/api/chores/' + id, 'PUT', { done });
+  await refreshEverything();
+  if (document.getElementById('day-modal').classList.contains('open')) renderDayModalBody();
+}
 
-// ---------- Events ----------
+async function refreshEverything() {
+  await loadAllData();
+  renderCurrentView();
+  loadChoresPanel();
+  loadRemindersPanel();
+  loadTrips();
+}
+
+// ---------- Events (main add-form) ----------
 document.getElementById('event-form').addEventListener('submit', async e => {
   e.preventDefault();
   const endDate = document.getElementById('event-end-date').value;
@@ -638,9 +712,7 @@ document.getElementById('event-form').addEventListener('submit', async e => {
     person: document.getElementById('event-person').value
   });
   e.target.reset();
-  await loadAllData();
-  renderCurrentView();
-  document.getElementById('day-modal').classList.remove('open');
+  await refreshEverything();
 });
 
 // ---------- Chores ----------
@@ -654,40 +726,34 @@ document.getElementById('chore-form').addEventListener('submit', async e => {
     done: false
   });
   e.target.reset();
-  await loadAllData();
-  loadChoresPanel();
-  renderCurrentView();
+  await refreshEverything();
 });
-async function loadChoresPanel() {
+function loadChoresPanel() {
   let chores = allChores;
   if (activeMemberFilter !== 'all') chores = chores.filter(c => c.person === activeMemberFilter);
   const el = document.getElementById('chores-list');
   if (!chores.length) { el.innerHTML = '<div class="empty-state">Nothing on the list yet — add a chore, study task, or dog day above! 🐶</div>'; return; }
   const familyItems = chores.filter(c => c.person === 'family');
   const individualItems = chores.filter(c => c.person !== 'family');
-  function renderChoreRow(c) {
+  function row(c) {
     return `
     <div class="item-row">
       <div class="item-left">
         <div class="checkbox ${c.done?'done':''}" onclick="toggleChore('${c.id}', ${!c.done})"></div>
         <div>
           <div class="item-title ${c.done?'done-text':''}">${escapeHtml(c.title)}</div>
-          <div class="item-sub">${memberName(c.person)} · ${c.frequency}${c.due ? ' · due ' + c.due : ''}</div>
+          <div class="item-sub">${memberName(c.person)} · ${c.frequency}${c.due ? ' · due ' + fmtDate(c.due) : ''}</div>
         </div>
       </div>
-      <button class="btn small danger" onclick="deleteItem('chores','${c.id}')">Remove</button>
+      <div class="item-actions">
+        <button class="icon-btn" onclick="deleteItem('chores','${c.id}')" title="Delete">🗑️</button>
+      </div>
     </div>`;
   }
   let html = '';
-  if (familyItems.length) html += `<h4 style="margin:0 0 8px;">🏠 Whole Family</h4>` + familyItems.map(renderChoreRow).join('');
-  if (individualItems.length) html += `<h4 style="margin:${familyItems.length?'18px':'0'} 0 8px;">🙋 Individual</h4>` + individualItems.map(renderChoreRow).join('');
+  if (familyItems.length) html += `<h4 style="margin:0 0 8px;">🏠 Whole Family</h4>` + familyItems.map(row).join('');
+  if (individualItems.length) html += `<h4 style="margin:${familyItems.length?'18px':'0'} 0 8px;">🙋 Individual</h4>` + individualItems.map(row).join('');
   el.innerHTML = html;
-}
-async function toggleChore(id, done) {
-  await api('/api/chores/' + id, 'PUT', { done });
-  await loadAllData();
-  loadChoresPanel();
-  renderCurrentView();
 }
 
 // ---------- Reminders ----------
@@ -699,33 +765,33 @@ document.getElementById('reminder-form').addEventListener('submit', async e => {
     person: document.getElementById('reminder-person').value
   });
   e.target.reset();
-  await loadAllData();
-  loadRemindersPanel();
-  renderCurrentView();
+  await refreshEverything();
 });
-async function loadRemindersPanel() {
+function loadRemindersPanel() {
   let reminders = allReminders;
   if (activeMemberFilter !== 'all') reminders = reminders.filter(r => r.person === activeMemberFilter);
   const el = document.getElementById('reminders-list');
   if (!reminders.length) { el.innerHTML = '<div class="empty-state">No reminders yet. Add one above! ⏰</div>'; return; }
   const familyItems = reminders.filter(r => r.person === 'family');
   const individualItems = reminders.filter(r => r.person !== 'family');
-  function renderReminderRow(r) {
+  function row(r) {
     return `
     <div class="item-row">
       <div class="item-left">
         <div class="dot" style="background:${memberColor(r.person)}"></div>
         <div>
           <div class="item-title">${escapeHtml(r.title)}</div>
-          <div class="item-sub">${r.date ? r.date + ' · ' : ''}${memberName(r.person)}</div>
+          <div class="item-sub">${r.date ? fmtDate(r.date) + ' · ' : ''}${memberName(r.person)}</div>
         </div>
       </div>
-      <button class="btn small danger" onclick="deleteItem('reminders','${r.id}')">Remove</button>
+      <div class="item-actions">
+        <button class="icon-btn" onclick="deleteItem('reminders','${r.id}')" title="Delete">🗑️</button>
+      </div>
     </div>`;
   }
   let html = '';
-  if (familyItems.length) html += `<h4 style="margin:0 0 8px;">🏠 Whole Family</h4>` + familyItems.map(renderReminderRow).join('');
-  if (individualItems.length) html += `<h4 style="margin:${familyItems.length?'18px':'0'} 0 8px;">🙋 Individual</h4>` + individualItems.map(renderReminderRow).join('');
+  if (familyItems.length) html += `<h4 style="margin:0 0 8px;">🏠 Whole Family</h4>` + familyItems.map(row).join('');
+  if (individualItems.length) html += `<h4 style="margin:${familyItems.length?'18px':'0'} 0 8px;">🙋 Individual</h4>` + individualItems.map(row).join('');
   el.innerHTML = html;
 }
 
@@ -754,7 +820,7 @@ async function loadLists() {
               <div class="checkbox ${item.done?'done':''}" onclick="toggleListItem('${list.id}', ${idx})"></div>
               <div class="item-title ${item.done?'done-text':''}">${escapeHtml(item.text)}</div>
             </div>
-            <button class="btn small danger" onclick="removeListItem('${list.id}', ${idx})">✕</button>
+            <button class="icon-btn" onclick="removeListItem('${list.id}', ${idx})">✕</button>
           </div>
         `).join('') || '<div class="empty-state">Empty list</div>'}
       </div>
@@ -785,6 +851,130 @@ async function removeListItem(listId, idx) {
   loadLists();
 }
 
+// ---------- Trips (Pros & Cons) ----------
+document.getElementById('trip-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  await api('/api/trips', 'POST', {
+    name: document.getElementById('trip-name').value,
+    startDate: document.getElementById('trip-start').value,
+    endDate: document.getElementById('trip-end').value,
+    weatherInfo: '', thingsToDo: '', flightEconomyPrice: '', flightBusinessPrice: '',
+    pros: [], cons: []
+  });
+  e.target.reset();
+  await loadAllData();
+  loadTrips();
+});
+async function loadTrips() {
+  allTrips = await api('/api/trips');
+  const el = document.getElementById('trips-container');
+  if (!allTrips.length) { el.innerHTML = '<div class="card"><div class="empty-state">No trips yet — start planning one above! ✈️</div></div>'; return; }
+  el.innerHTML = allTrips.map(t => `
+    <div class="card trip-card" onclick="openTripModal('${t.id}')">
+      <div class="section-title" style="margin-bottom:4px;">🌍 ${escapeHtml(t.name)}</div>
+      <div class="trip-dates">${fmtDate(t.startDate)} – ${fmtDate(t.endDate)}</div>
+      <div class="item-sub" style="margin-top:6px;">${(t.pros||[]).length} pros · ${(t.cons||[]).length} cons</div>
+    </div>
+  `).join('');
+}
+function flightLink(from, to, dateOut, dateBack, cabin) {
+  return `https://www.google.com/travel/flights?q=Flights%20from%20${from}%20to%20${to}%20on%20${dateOut}%20through%20${dateBack}%20${cabin}`;
+}
+function openTripModal(id) {
+  const t = allTrips.find(x => x.id === id);
+  document.getElementById('trip-modal-title').textContent = t.name;
+  document.getElementById('trip-modal-body').innerHTML = `
+    <div class="trip-dates" style="margin-bottom:10px;">${fmtDate(t.startDate)} – ${fmtDate(t.endDate)}</div>
+
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="label">☀️ Weather (typical)</div>
+        <textarea id="trip-weather-${id}" placeholder="Add notes on weather/climate...">${escapeHtml(t.weatherInfo || '')}</textarea>
+      </div>
+      <div class="info-box">
+        <div class="label">🗺️ Things to see & do</div>
+        <textarea id="trip-todo-${id}" placeholder="Add things to see and do...">${escapeHtml(t.thingsToDo || '')}</textarea>
+      </div>
+      <div class="info-box">
+        <div class="label">💺 SQ Economy (adult, round trip)</div>
+        <input type="text" id="trip-econ-${id}" value="${escapeHtml(t.flightEconomyPrice || '')}" placeholder="e.g. SGD 1,450">
+        <a href="${flightLink('SIN','CPH',t.startDate,t.endDate,'economy')}" target="_blank" style="font-size:12px; display:block; margin-top:6px;">🔗 Check current price →</a>
+      </div>
+      <div class="info-box">
+        <div class="label">🥂 SQ Business (adult, round trip)</div>
+        <input type="text" id="trip-biz-${id}" value="${escapeHtml(t.flightBusinessPrice || '')}" placeholder="e.g. SGD 5,200">
+        <a href="${flightLink('SIN','CPH',t.startDate,t.endDate,'business')}" target="_blank" style="font-size:12px; display:block; margin-top:6px;">🔗 Check current price →</a>
+      </div>
+    </div>
+    <p style="font-size:12px; color:var(--muted); margin:-6px 0 12px;">Note: live flight prices need a paid airfare API, so these fields are manual — tap "Check current price" to look it up, then update the field.</p>
+    <button class="btn small" onclick="saveTripInfo('${id}')">Save info</button>
+
+    <div class="proscons-cols">
+      <div class="proscons-col">
+        <h4>👍 Pros</h4>
+        <form class="add-form" onsubmit="addProCon(event,'${id}','pros')">
+          <input type="text" placeholder="Add a pro…" required>
+          <button class="btn small" type="submit">Add</button>
+        </form>
+        <div>${(t.pros||[]).map((p,idx) => `
+          <div class="item-row">
+            <div class="item-title">${escapeHtml(p.text)}</div>
+            <button class="icon-btn" onclick="removeProCon('${id}','pros',${idx})">✕</button>
+          </div>`).join('') || '<div class="empty-state">None yet</div>'}
+        </div>
+      </div>
+      <div class="proscons-col">
+        <h4>👎 Cons</h4>
+        <form class="add-form" onsubmit="addProCon(event,'${id}','cons')">
+          <input type="text" placeholder="Add a con…" required>
+          <button class="btn small" type="submit">Add</button>
+        </form>
+        <div>${(t.cons||[]).map((c,idx) => `
+          <div class="item-row">
+            <div class="item-title">${escapeHtml(c.text)}</div>
+            <button class="icon-btn" onclick="removeProCon('${id}','cons',${idx})">✕</button>
+          </div>`).join('') || '<div class="empty-state">None yet</div>'}
+        </div>
+      </div>
+    </div>
+    <button class="btn danger small" style="margin-top:16px;" onclick="deleteTrip('${id}')">Delete this trip</button>
+  `;
+  openModal('trip-modal');
+}
+async function saveTripInfo(id) {
+  await api('/api/trips/' + id, 'PUT', {
+    weatherInfo: document.getElementById(`trip-weather-${id}`).value,
+    thingsToDo: document.getElementById(`trip-todo-${id}`).value,
+    flightEconomyPrice: document.getElementById(`trip-econ-${id}`).value,
+    flightBusinessPrice: document.getElementById(`trip-biz-${id}`).value
+  });
+  await loadTrips();
+  openTripModal(id);
+}
+async function addProCon(e, id, key) {
+  e.preventDefault();
+  const input = e.target.querySelector('input');
+  const t = allTrips.find(x => x.id === id);
+  const list = [...(t[key] || []), { text: input.value }];
+  await api('/api/trips/' + id, 'PUT', { [key]: list });
+  await loadTrips();
+  openTripModal(id);
+}
+async function removeProCon(id, key, idx) {
+  const t = allTrips.find(x => x.id === id);
+  const list = [...(t[key] || [])];
+  list.splice(idx, 1);
+  await api('/api/trips/' + id, 'PUT', { [key]: list });
+  await loadTrips();
+  openTripModal(id);
+}
+async function deleteTrip(id) {
+  if (!confirm('Delete this whole trip?')) return;
+  await api('/api/trips/' + id, 'DELETE');
+  closeModal('trip-modal');
+  await loadTrips();
+}
+
 // ---------- Files ----------
 document.getElementById('file-form').addEventListener('submit', async e => {
   e.preventDefault();
@@ -809,16 +999,62 @@ async function loadFiles() {
           <div class="item-sub">Added by ${memberName(f.person)}</div>
         </div>
       </div>
-      <button class="btn small danger" onclick="deleteItem('files','${f.id}')">Remove</button>
+      <button class="icon-btn" onclick="deleteItem('files','${f.id}')" title="Delete">🗑️</button>
     </div>
   `).join('');
 }
 
 async function deleteItem(resource, id) {
   await api('/api/' + resource + '/' + id, 'DELETE');
-  await loadAllData();
-  loadChoresPanel(); loadRemindersPanel(); loadFiles();
-  renderCurrentView();
+  await refreshEverything();
+  loadFiles();
+}
+
+// ---------- Voice input ----------
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+document.getElementById('mic-btn').addEventListener('click', () => {
+  if (!SpeechRecognitionAPI) {
+    document.getElementById('voice-modal-body').innerHTML = '<div class="empty-state">Voice input isn\'t supported in this browser. Try Chrome on Android or desktop.</div>';
+    openModal('voice-modal');
+    return;
+  }
+  const recognition = new SpeechRecognitionAPI();
+  recognition.lang = 'en-SG';
+  recognition.interimResults = false;
+  document.getElementById('voice-modal-body').innerHTML = '<div class="empty-state">🎙️ Listening… speak now</div>';
+  openModal('voice-modal');
+  document.getElementById('mic-btn').classList.add('listening');
+  recognition.start();
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    showVoiceResult(transcript);
+  };
+  recognition.onerror = () => {
+    document.getElementById('voice-modal-body').innerHTML = '<div class="empty-state">Didn\'t catch that — tap the mic to try again.</div>';
+  };
+  recognition.onend = () => document.getElementById('mic-btn').classList.remove('listening');
+});
+function showVoiceResult(transcript) {
+  document.getElementById('voice-modal-body').innerHTML = `
+    <p style="font-weight:700; font-family:'Quicksand',sans-serif;">"${escapeHtml(transcript)}"</p>
+    <p style="font-size:13px; color:var(--muted);">Add this as:</p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btn small" onclick="voiceQuickAdd('events','${escapeHtml(transcript)}')">📅 Event today</button>
+      <button class="btn small" onclick="voiceQuickAdd('chores','${escapeHtml(transcript)}')">🧹 Chore</button>
+      <button class="btn small" onclick="voiceQuickAdd('reminders','${escapeHtml(transcript)}')">⏰ Reminder today</button>
+    </div>
+  `;
+}
+async function voiceQuickAdd(resource, title) {
+  const today = dateStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+  const payloadMap = {
+    events: { title, date: today, person: 'family' },
+    chores: { title, person: 'family', frequency: 'once', due: today, done: false },
+    reminders: { title, date: today, person: 'family' }
+  };
+  await api('/api/' + resource, 'POST', payloadMap[resource]);
+  await refreshEverything();
+  closeModal('voice-modal');
 }
 
 async function init() {
@@ -834,7 +1070,28 @@ async function init() {
   loadChoresPanel();
   loadRemindersPanel();
   loadLists();
+  loadTrips();
   loadFiles();
+
+  // Seed the Denmark & Sweden trip if it doesn't exist yet
+  if (!allTrips.some(t => t.name === 'Denmark & Sweden Family Holiday')) {
+    await api('/api/trips', 'POST', {
+      name: 'Denmark & Sweden Family Holiday',
+      startDate: '2026-12-12',
+      endDate: '2026-12-26',
+      weatherInfo: 'Copenhagen: highs ~4°C / lows ~0°C, damp and often overcast, ~7hrs daylight, chance of snow/rain — pack warm coats, scarves, gloves. Stockholm: colder, highs ~1°C / lows ~-2°C, ~6hrs daylight.',
+      thingsToDo: 'Copenhagen: Tivoli Gardens Christmas Market, Nyhavn canal walk & Christmas market, Kongens Nytorv ice rink, Christiania Christmas Market. Stockholm: Skansen open-air museum Christmas market, Gamla Stan (Old Town) Christmas markets at Stortorget, Vasa Museum, ICEBAR Stockholm.',
+      flightEconomyPrice: '', flightBusinessPrice: '',
+      pros: [{ text: 'SQ flies direct SIN–CPH, ~13h45m, no layover' }],
+      cons: [{ text: 'Very cold and short daylight hours in December' }]
+    });
+    await loadAllData();
+    loadTrips();
+    // Also add it to the family calendar
+    await api('/api/events', 'POST', { title: 'Denmark & Sweden Family Holiday', date: '2026-12-12', endDate: '2026-12-26', person: 'family' });
+    await loadAllData();
+    renderCurrentView();
+  }
 }
 init();
 </script>
