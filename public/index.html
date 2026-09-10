@@ -8,19 +8,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --beige: #F4ECE0;
-    --card: #FFFBF6;
-    --ink: #4A4238;
-    --muted: #93876F;
-    --border: #E5D9C7;
-    --gold: #EAC873;
-    --gold-deep: #D9A93F;
-    --sage: #AECFAA;
-    --blue: #A9C8DE;
-    --lavender: #CBB8DD;
-    --blush: #E9B7B3;
-    --shadow: rgba(74,66,56,0.10);
+    --beige: #EAFBF8;
+    --card: #FFFFFF;
+    --ink: #1B3B36;
+    --muted: #5C7D77;
+    --border: #CFEFE9;
+    --gold: #FFD23F;
+    --gold-deep: #FFD23F;
+    --sage: #B6E23B;
+    --blue: #3DA9FC;
+    --lavender: #A66BFF;
+    --blush: #FF6B5B;
+    --shadow: rgba(27,59,54,0.12);
     --sidebar-w: 68px;
+    --turquoise: #2EC4B6;
+    --lime: #B6E23B;
+    --yellow: #FFD23F;
   }
   * { box-sizing: border-box; }
   body {
@@ -124,6 +127,9 @@
   .view-toggle button.active { background: var(--gold-deep); color: var(--ink); border-color: var(--gold-deep); }
 
   /* ---------- Month grid ---------- */
+  .two-month-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .month-block h5 { text-align: center; font-family: 'Quicksand', sans-serif; font-weight: 700; margin-bottom: 8px; }
+  @media (max-width: 900px) { .two-month-grid { grid-template-columns: 1fr; } }
   .weekday-row, .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .weekday-row { margin-bottom: 6px; }
   .weekday-row div { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
@@ -249,12 +255,30 @@
 
 <div class="layout">
   <nav class="sidebar" id="sidebar">
-    <button class="active" data-panel="calendar">🏠<span class="tip">Calendar</span></button>
-    <button data-panel="chores">🧹<span class="tip">Chores & Planning</span></button>
-    <button data-panel="reminders">⏰<span class="tip">Reminders</span></button>
-    <button data-panel="lists">📝<span class="tip">Lists</span></button>
-    <button data-panel="trips">🌍<span class="tip">Trips (Pros & Cons)</span></button>
-    <button data-panel="files">📁<span class="tip">Files</span></button>
+    <button class="active" data-panel="calendar" style="color:#3DA9FC;">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="#3DA9FC" stroke="#1B3B36" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 9h18" stroke="#1B3B36"/><path d="M8 3v4M16 3v4" stroke="#1B3B36" stroke-linecap="round"/><circle cx="8" cy="14" r="1.3" fill="#1B3B36" stroke="none"/><circle cx="12" cy="14" r="1.3" fill="#1B3B36" stroke="none"/><circle cx="16" cy="14" r="1.3" fill="#1B3B36" stroke="none"/></svg>
+      <span class="tip">Calendar</span>
+    </button>
+    <button data-panel="chores">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="#B6E23B" stroke="#1B3B36" stroke-width="1.6"><path d="M14 3l7 7-8.5 8.5a3 3 0 01-4.24 0l-2.76-2.76a3 3 0 010-4.24L14 3z"/><path d="M4 20l3.5-3.5" stroke="#1B3B36" stroke-linecap="round"/></svg>
+      <span class="tip">Chores & Planning</span>
+    </button>
+    <button data-panel="reminders">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="#FFD23F" stroke="#1B3B36" stroke-width="1.6"><path d="M12 4a6 6 0 00-6 6v3l-2 3h16l-2-3v-3a6 6 0 00-6-6z"/><path d="M10 19a2 2 0 004 0" stroke="#1B3B36" fill="none"/></svg>
+      <span class="tip">Reminders</span>
+    </button>
+    <button data-panel="lists">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="#A66BFF" stroke="#1B3B36" stroke-width="1.6"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#1B3B36"/></svg>
+      <span class="tip">Lists</span>
+    </button>
+    <button data-panel="trips">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="#2EC4B6" stroke="#1B3B36" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" stroke="#1B3B36" fill="none"/></svg>
+      <span class="tip">Trips (Pros & Cons)</span>
+    </button>
+    <button data-panel="files">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="#FF6B5B" stroke="#1B3B36" stroke-width="1.6"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+      <span class="tip">Files</span>
+    </button>
   </nav>
 
   <div class="main-content">
@@ -276,10 +300,20 @@
           </div>
         </div>
         <div id="month-view">
-          <div class="weekday-row">
-            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+          <div class="two-month-grid" id="two-month-grid">
+            <div class="month-block">
+              <div class="weekday-row">
+                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+              </div>
+              <div class="month-grid" id="month-grid-0"></div>
+            </div>
+            <div class="month-block" id="month-block-1">
+              <div class="weekday-row">
+                <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+              </div>
+              <div class="month-grid" id="month-grid-1"></div>
+            </div>
           </div>
-          <div class="month-grid" id="month-grid"></div>
         </div>
         <div id="year-view" style="display:none">
           <div class="year-grid" id="year-grid"></div>
@@ -514,11 +548,9 @@ function itemsForDate(dateString) {
   return items;
 }
 
-// ---------- Month view ----------
-function renderMonth() {
-  const y = viewDate.getFullYear(), m = viewDate.getMonth();
-  document.getElementById('cal-title').textContent = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  const grid = document.getElementById('month-grid');
+// ---------- Month view (shows current + next month side by side) ----------
+function renderSingleMonthGrid(y, m, gridId) {
+  const grid = document.getElementById(gridId);
   const firstDay = new Date(y, m, 1).getDay();
   const daysInMonth = new Date(y, m + 1, 0).getDate();
   const daysInPrevMonth = new Date(y, m, 0).getDate();
@@ -545,6 +577,26 @@ function renderMonth() {
   grid.querySelectorAll('.day-cell[data-date]').forEach(cell => {
     cell.addEventListener('click', () => openDayModal(cell.dataset.date));
   });
+}
+function renderMonth() {
+  const y1 = viewDate.getFullYear(), m1 = viewDate.getMonth();
+  const secondDate = new Date(y1, m1 + 1, 1);
+  const y2 = secondDate.getFullYear(), m2 = secondDate.getMonth();
+
+  const label1 = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const label2 = secondDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  document.getElementById('cal-title').textContent = `${viewDate.toLocaleDateString('en-US',{month:'short'})} – ${secondDate.toLocaleDateString('en-US',{month:'short'})} ${y2}`;
+
+  renderSingleMonthGrid(y1, m1, 'month-grid-0');
+  renderSingleMonthGrid(y2, m2, 'month-grid-1');
+
+  // Add month name headers above each block (only once)
+  const block0 = document.getElementById('month-grid-0').parentElement;
+  const block1 = document.getElementById('month-block-1');
+  if (!block0.querySelector('h5')) block0.insertAdjacentHTML('afterbegin', `<h5>${label1}</h5>`);
+  else block0.querySelector('h5').textContent = label1;
+  if (!block1.querySelector('h5')) block1.insertAdjacentHTML('afterbegin', `<h5>${label2}</h5>`);
+  else block1.querySelector('h5').textContent = label2;
 }
 
 // ---------- Year view ----------
@@ -858,7 +910,7 @@ document.getElementById('trip-form').addEventListener('submit', async e => {
     name: document.getElementById('trip-name').value,
     startDate: document.getElementById('trip-start').value,
     endDate: document.getElementById('trip-end').value,
-    weatherInfo: '', thingsToDo: '', flightEconomyPrice: '', flightBusinessPrice: '',
+    cities: '', weatherInfo: '', thingsToDo: '', flightEconomyPrice: '', flightBusinessPrice: '',
     pros: [], cons: []
   });
   e.target.reset();
@@ -872,19 +924,31 @@ async function loadTrips() {
   el.innerHTML = allTrips.map(t => `
     <div class="card trip-card" onclick="openTripModal('${t.id}')">
       <div class="section-title" style="margin-bottom:4px;">🌍 ${escapeHtml(t.name)}</div>
-      <div class="trip-dates">${fmtDate(t.startDate)} – ${fmtDate(t.endDate)}</div>
+      <div class="trip-dates">${t.startDate ? fmtDate(t.startDate) + ' – ' + fmtDate(t.endDate) : 'Dates not set yet'}</div>
       <div class="item-sub" style="margin-top:6px;">${(t.pros||[]).length} pros · ${(t.cons||[]).length} cons</div>
     </div>
   `).join('');
 }
-function flightLink(from, to, dateOut, dateBack, cabin) {
-  return `https://www.google.com/travel/flights?q=Flights%20from%20${from}%20to%20${to}%20on%20${dateOut}%20through%20${dateBack}%20${cabin}`;
+function siaLink() {
+  return `https://www.singaporeair.com/en_SG/sg/home/`;
+}
+function bookingApartmentLink(city, checkin, checkout) {
+  const params = new URLSearchParams({ ss: city, checkin: checkin || '', checkout: checkout || '', group_adults: '4', nflt: 'roomfacility=13' });
+  return `https://www.booking.com/searchresults.html?${params.toString()}`;
 }
 function openTripModal(id) {
   const t = allTrips.find(x => x.id === id);
-  document.getElementById('trip-modal-title').textContent = t.name;
+  document.getElementById('trip-modal-title').textContent = '🌍 Trip details';
+  const cities = (t.cities || '').split(',').map(c => c.trim()).filter(Boolean);
   document.getElementById('trip-modal-body').innerHTML = `
-    <div class="trip-dates" style="margin-bottom:10px;">${fmtDate(t.startDate)} – ${fmtDate(t.endDate)}</div>
+    <div class="edit-form" style="margin-bottom:14px;">
+      <input type="text" id="trip-name-${id}" value="${escapeHtml(t.name)}" style="font-family:'Quicksand',sans-serif; font-weight:700; font-size:17px;">
+      <div class="row">
+        <input type="date" id="trip-start-${id}" value="${t.startDate || ''}">
+        <input type="date" id="trip-end-${id}" value="${t.endDate || ''}">
+        <input type="text" id="trip-cities-${id}" value="${escapeHtml(t.cities || '')}" placeholder="Cities, comma separated (e.g. Copenhagen, Stockholm)" style="flex:1; min-width:200px;">
+      </div>
+    </div>
 
     <div class="info-grid">
       <div class="info-box">
@@ -898,15 +962,19 @@ function openTripModal(id) {
       <div class="info-box">
         <div class="label">💺 SQ Economy (adult, round trip)</div>
         <input type="text" id="trip-econ-${id}" value="${escapeHtml(t.flightEconomyPrice || '')}" placeholder="e.g. SGD 1,450">
-        <a href="${flightLink('SIN','CPH',t.startDate,t.endDate,'economy')}" target="_blank" style="font-size:12px; display:block; margin-top:6px;">🔗 Check current price →</a>
+        <a href="${siaLink()}" target="_blank" style="font-size:12px; display:block; margin-top:6px;">🔗 Check & book on singaporeair.com →</a>
       </div>
       <div class="info-box">
         <div class="label">🥂 SQ Business (adult, round trip)</div>
         <input type="text" id="trip-biz-${id}" value="${escapeHtml(t.flightBusinessPrice || '')}" placeholder="e.g. SGD 5,200">
-        <a href="${flightLink('SIN','CPH',t.startDate,t.endDate,'business')}" target="_blank" style="font-size:12px; display:block; margin-top:6px;">🔗 Check current price →</a>
+        <a href="${siaLink()}" target="_blank" style="font-size:12px; display:block; margin-top:6px;">🔗 Check & book on singaporeair.com →</a>
+      </div>
+      <div class="info-box" style="grid-column: 1 / -1;">
+        <div class="label">🏢 Accommodation — 3+ bedroom apartments, 9★+ rated</div>
+        <p style="font-size:12px; color:var(--muted); margin:4px 0 8px;">Booking.com doesn't support linking directly to exact bedroom/rating filters, so these links open a search for each city — apply "Entire apartments", "3+ bedrooms" and "Rated 9+" yourself using Booking.com's filter sidebar.</p>
+        ${cities.length ? cities.map(c => `<a href="${bookingApartmentLink(c, t.startDate, t.endDate)}" target="_blank" style="font-size:13px; display:block; margin-top:4px;">🔗 Search apartments in ${escapeHtml(c)} →</a>`).join('') : '<div style="font-size:12px; color:var(--muted);">Add cities above to get search links.</div>'}
       </div>
     </div>
-    <p style="font-size:12px; color:var(--muted); margin:-6px 0 12px;">Note: live flight prices need a paid airfare API, so these fields are manual — tap "Check current price" to look it up, then update the field.</p>
     <button class="btn small" onclick="saveTripInfo('${id}')">Save info</button>
 
     <div class="proscons-cols">
@@ -943,12 +1011,18 @@ function openTripModal(id) {
 }
 async function saveTripInfo(id) {
   await api('/api/trips/' + id, 'PUT', {
+    name: document.getElementById(`trip-name-${id}`).value,
+    startDate: document.getElementById(`trip-start-${id}`).value,
+    endDate: document.getElementById(`trip-end-${id}`).value,
+    cities: document.getElementById(`trip-cities-${id}`).value,
     weatherInfo: document.getElementById(`trip-weather-${id}`).value,
     thingsToDo: document.getElementById(`trip-todo-${id}`).value,
     flightEconomyPrice: document.getElementById(`trip-econ-${id}`).value,
     flightBusinessPrice: document.getElementById(`trip-biz-${id}`).value
   });
-  await loadTrips();
+  await loadAllData();
+  loadTrips();
+  await refreshEverything();
   openTripModal(id);
 }
 async function addProCon(e, id, key) {
@@ -1073,25 +1147,76 @@ async function init() {
   loadTrips();
   loadFiles();
 
-  // Seed the Denmark & Sweden trip if it doesn't exist yet
-  if (!allTrips.some(t => t.name === 'Denmark & Sweden Family Holiday')) {
-    await api('/api/trips', 'POST', {
+  // Seed trip templates if they don't exist yet
+  const existingNames = allTrips.map(t => t.name);
+  const seeds = [
+    {
       name: 'Denmark & Sweden Family Holiday',
-      startDate: '2026-12-12',
-      endDate: '2026-12-26',
+      startDate: '2026-12-12', endDate: '2026-12-26',
+      cities: 'Copenhagen, Stockholm',
       weatherInfo: 'Copenhagen: highs ~4°C / lows ~0°C, damp and often overcast, ~7hrs daylight, chance of snow/rain — pack warm coats, scarves, gloves. Stockholm: colder, highs ~1°C / lows ~-2°C, ~6hrs daylight.',
       thingsToDo: 'Copenhagen: Tivoli Gardens Christmas Market, Nyhavn canal walk & Christmas market, Kongens Nytorv ice rink, Christiania Christmas Market. Stockholm: Skansen open-air museum Christmas market, Gamla Stan (Old Town) Christmas markets at Stortorget, Vasa Museum, ICEBAR Stockholm.',
-      flightEconomyPrice: '', flightBusinessPrice: '',
       pros: [{ text: 'SQ flies direct SIN–CPH, ~13h45m, no layover' }],
-      cons: [{ text: 'Very cold and short daylight hours in December' }]
-    });
-    await loadAllData();
-    loadTrips();
-    // Also add it to the family calendar
-    await api('/api/events', 'POST', { title: 'Denmark & Sweden Family Holiday', date: '2026-12-12', endDate: '2026-12-26', person: 'family' });
-    await loadAllData();
-    renderCurrentView();
+      cons: [{ text: 'Very cold and short daylight hours in December' }],
+      addToCalendar: true
+    },
+    {
+      name: 'Tokyo & Seoul Adventure',
+      startDate: '', endDate: '',
+      cities: 'Tokyo, Seoul',
+      weatherInfo: '',
+      thingsToDo: 'Tokyo: Senso-ji Temple in Asakusa, Shibuya Crossing & Sky, teamLab Planets/Borderless digital art, Akihabara for anime/games, Meiji Shrine, Tokyo Disneyland/DisneySea. Seoul: Gyeongbokgung Palace, Bukchon Hanok Village, Myeongdong shopping & street food, N Seoul Tower, Gwangjang Market food tour, Lotte World.',
+      pros: [{ text: 'Two very different but complementary cultures in one trip' }],
+      cons: [{ text: 'Requires a flight between Tokyo and Seoul, adding travel time' }],
+      addToCalendar: false
+    },
+    {
+      name: 'Greece & Turkey Explorer',
+      startDate: '', endDate: '',
+      cities: 'Athens, Santorini, Istanbul',
+      weatherInfo: '',
+      thingsToDo: 'Greece: Acropolis & Parthenon in Athens, Santorini caldera sunsets, Plaka old town, Greek island-hopping (Mykonos/Santorini). Turkey: Hagia Sophia & Blue Mosque in Istanbul, Grand Bazaar, Cappadocia hot air balloon rides & fairy chimneys, Ephesus ancient ruins, Pamukkale thermal terraces.',
+      pros: [{ text: 'Rich mix of ancient history, islands, and unique landscapes (Cappadocia)' }],
+      cons: [{ text: 'Long trip if covering both countries properly — 10-14 days recommended' }],
+      addToCalendar: false
+    },
+    {
+      name: 'Spain & Portugal Getaway',
+      startDate: '', endDate: '',
+      cities: 'Barcelona, Madrid, Lisbon, Porto',
+      weatherInfo: '',
+      thingsToDo: 'Spain: Sagrada Família & Park Güell in Barcelona, Prado Museum & Royal Palace in Madrid, flamenco in Seville, Alhambra in Granada. Portugal: Belém Tower & Jerónimos Monastery in Lisbon, Sintra day trip, Porto old town & Douro Valley wine tours, historic Ribeira district.',
+      pros: [{ text: 'Great food and walkable historic old towns in every city' }],
+      cons: [{ text: 'Intercity travel (train/flights) needed to cover both countries' }],
+      addToCalendar: false
+    },
+    {
+      name: 'Sydney & Auckland Trip',
+      startDate: '', endDate: '',
+      cities: 'Sydney, Auckland',
+      weatherInfo: '',
+      thingsToDo: 'Sydney: Sydney Opera House tour, Harbour Bridge climb/walk, Bondi to Coogee coastal walk, Taronga Zoo, Blue Mountains day trip. Auckland: Auckland War Memorial Museum, Waiheke Island wine tours, Sky Tower, Bay of Islands day trip.',
+      pros: [{ text: 'Good flight connections and similar time zones, easy to combine' }],
+      cons: [{ text: 'Long-haul flight from Singapore either way (~8h to Sydney)' }],
+      addToCalendar: false
+    }
+  ];
+  for (const seed of seeds) {
+    if (!existingNames.includes(seed.name)) {
+      await api('/api/trips', 'POST', {
+        name: seed.name, startDate: seed.startDate, endDate: seed.endDate, cities: seed.cities,
+        weatherInfo: seed.weatherInfo, thingsToDo: seed.thingsToDo,
+        flightEconomyPrice: '', flightBusinessPrice: '',
+        pros: seed.pros, cons: seed.cons
+      });
+      if (seed.addToCalendar && seed.startDate) {
+        await api('/api/events', 'POST', { title: seed.name, date: seed.startDate, endDate: seed.endDate, person: 'family' });
+      }
+    }
   }
+  await loadAllData();
+  loadTrips();
+  renderCurrentView();
 }
 init();
 </script>
