@@ -26,13 +26,18 @@ function loadDB() {
       chores: [],
       lists: [],
       reminders: [],
-      files: []
+      files: [],
+      trips: []
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(initial, null, 2));
     return initial;
   }
   const db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
   delete db.members; // legacy field, no longer stored here
+  // Ensure any newly-added collections exist even for older data files
+  ['events', 'chores', 'lists', 'reminders', 'files', 'trips'].forEach(key => {
+    if (!Array.isArray(db[key])) db[key] = [];
+  });
   return db;
 }
 
@@ -99,7 +104,7 @@ async function handleAPI(req, res, urlPath) {
   const resource = parts[1]; // events, chores, lists, reminders, members, files
   const itemId = parts[2];
 
-  const collections = ['events', 'chores', 'lists', 'reminders', 'files'];
+  const collections = ['events', 'chores', 'lists', 'reminders', 'files', 'trips'];
 
   if (resource === 'members' && req.method === 'GET') {
     return sendJSON(res, 200, MEMBERS);
