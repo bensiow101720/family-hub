@@ -127,9 +127,9 @@
   .view-toggle button.active { background: var(--gold-deep); color: var(--ink); border-color: var(--gold-deep); }
 
   /* ---------- Month grid ---------- */
-  .two-month-grid { display: flex; flex-wrap: wrap; gap: 24px; }
-  .month-block { flex: 1 1 320px; min-width: 300px; }
-  .month-block h5 { text-align: center; font-family: 'Quicksand', sans-serif; font-weight: 700; margin-bottom: 8px; }
+  .two-month-grid { display: flex; flex-direction: column; gap: 28px; }
+  .month-block { width: 100%; }
+  .month-block h5 { text-align: center; font-family: 'Quicksand', sans-serif; font-weight: 700; margin-bottom: 8px; font-size: 17px; }
   .weekday-row, .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .weekday-row { margin-bottom: 6px; }
   .weekday-row div { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
