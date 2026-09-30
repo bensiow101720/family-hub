@@ -66,6 +66,12 @@
   .weather-clock .label { font-size: 10.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
   .weather-clock .value { font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 16px; }
   .weather-clock .icon { font-size: 24px; }
+  .city-select {
+    font-size: 10.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+    background: none; border: none; padding: 0; margin: 0 0 2px; cursor: pointer; font-family: 'Nunito', sans-serif;
+    -webkit-appearance: none; appearance: none;
+  }
+  .city-select:focus { outline: none; }
 
   /* ---------- Layout: sidebar + content ---------- */
   .layout { display: flex; align-items: flex-start; }
@@ -238,10 +244,21 @@
   /* ---------- Gallery ---------- */
   .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
   .gallery-item { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--card); position: relative; }
-  .gallery-item img { width: 100%; height: 140px; object-fit: cover; display: block; }
+  .gallery-item img { width: 100%; height: 140px; object-fit: cover; display: block; cursor: zoom-in; }
   .gallery-caption { padding: 8px 10px; font-size: 12.5px; }
   .gallery-caption .cap-person { color: var(--muted); font-weight: 700; font-size: 11px; }
   .gallery-delete { position: absolute; top: 6px; right: 6px; background: rgba(255,255,255,0.85); border: none; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; }
+
+  /* ---------- Photo lightbox ---------- */
+  .lightbox-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,30,27,0.94); z-index: 200; padding: 24px; flex-direction: column; align-items: center; justify-content: center; }
+  .lightbox-backdrop.open { display: flex; }
+  .lightbox-backdrop img { max-width: 92vw; max-height: 82vh; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+  .lightbox-caption { color: #fff; margin-top: 16px; font-weight: 700; text-align: center; font-family: 'Quicksand', sans-serif; }
+  .lightbox-close { position: absolute; top: 18px; right: 22px; background: rgba(255,255,255,0.18); border: none; color: #fff; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; }
+
+  /* ---------- Trip rating ---------- */
+  .trip-rating-badge { background: var(--gold); color: var(--ink); font-family: 'Quicksand', sans-serif; font-weight: 800; font-size: 15px; padding: 4px 10px; border-radius: 12px; white-space: nowrap; flex-shrink: 0; }
+  .trip-rating-badge span { font-size: 10px; font-weight: 700; opacity: 0.7; }
 
   /* ---------- Budget ---------- */
   .budget-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -260,7 +277,7 @@
   <div class="weather-clock">
     <span class="icon" id="weather-icon">🌤️</span>
     <div class="seg">
-      <div class="label">Singapore</div>
+      <select class="city-select" id="clock-city-select"></select>
       <div class="value" id="weather-temp">--°C</div>
     </div>
     <div class="seg">
@@ -514,6 +531,13 @@
   </div>
 </div>
 
+<!-- Photo lightbox -->
+<div class="lightbox-backdrop" id="photo-lightbox">
+  <button class="lightbox-close" id="lightbox-close">✕</button>
+  <img id="lightbox-img" src="" alt="">
+  <div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+
 <button class="mic-btn" id="mic-btn" title="Add by voice">🎤</button>
 
 <script>
@@ -650,16 +674,45 @@ document.querySelectorAll('#sidebar button').forEach(btn => {
   });
 });
 
-// ---------- Clock & Weather (Singapore) ----------
+// ---------- Clock & Weather (switchable city) ----------
+const WORLD_CITIES = [
+  { name: 'Singapore', tz: 'Asia/Singapore', lat: 1.3521, lon: 103.8198 },
+  { name: 'Hong Kong', tz: 'Asia/Hong_Kong', lat: 22.3193, lon: 114.1694 },
+  { name: 'Tokyo', tz: 'Asia/Tokyo', lat: 35.6762, lon: 139.6503 },
+  { name: 'Bangkok', tz: 'Asia/Bangkok', lat: 13.7563, lon: 100.5018 },
+  { name: 'Dubai', tz: 'Asia/Dubai', lat: 25.2048, lon: 55.2708 },
+  { name: 'London', tz: 'Europe/London', lat: 51.5072, lon: -0.1276 },
+  { name: 'Paris', tz: 'Europe/Paris', lat: 48.8566, lon: 2.3522 },
+  { name: 'New York', tz: 'America/New_York', lat: 40.7128, lon: -74.0060 },
+  { name: 'Los Angeles', tz: 'America/Los_Angeles', lat: 34.0522, lon: -118.2437 },
+  { name: 'Sydney', tz: 'Australia/Sydney', lat: -33.8688, lon: 151.2093 },
+  { name: 'Auckland', tz: 'Pacific/Auckland', lat: -36.8485, lon: 174.7633 }
+];
+function getSelectedCity() {
+  const saved = localStorage.getItem('whub_city');
+  return WORLD_CITIES.find(c => c.name === saved) || WORLD_CITIES[0];
+}
+function populateCitySelect() {
+  const sel = document.getElementById('clock-city-select');
+  sel.innerHTML = WORLD_CITIES.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+  sel.value = getSelectedCity().name;
+  sel.addEventListener('change', () => {
+    localStorage.setItem('whub_city', sel.value);
+    updateClock();
+    loadWeather();
+  });
+}
 function updateClock() {
+  const city = getSelectedCity();
   const now = new Date();
-  const opts = { timeZone: 'Asia/Singapore', hour: '2-digit', minute: '2-digit', hour12: false };
-  const dateOpts = { timeZone: 'Asia/Singapore', weekday: 'short', day: 'numeric', month: 'short' };
+  const opts = { timeZone: city.tz, hour: '2-digit', minute: '2-digit', hour12: false };
+  const dateOpts = { timeZone: city.tz, weekday: 'short', day: 'numeric', month: 'short' };
   document.getElementById('clock-time').textContent = now.toLocaleTimeString('en-GB', opts);
   document.getElementById('clock-date').textContent = now.toLocaleDateString('en-GB', dateOpts);
 }
 function loadWeather() {
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=1.3521&longitude=103.8198&current=temperature_2m,weather_code&timezone=Asia/Singapore')
+  const city = getSelectedCity();
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current=temperature_2m,weather_code&timezone=${encodeURIComponent(city.tz)}`)
     .then(r => r.json())
     .then(data => {
       document.getElementById('weather-temp').textContent = Math.round(data.current.temperature_2m) + '°C';
@@ -1107,7 +1160,7 @@ document.getElementById('trip-form').addEventListener('submit', async e => {
     startDate: document.getElementById('trip-start').value,
     endDate: document.getElementById('trip-end').value,
     cities: '', weatherInfo: '', thingsToDo: '', flightEconomyPrice: '', flightBusinessPrice: '',
-    pros: [], cons: []
+    rating: null, pros: [], cons: []
   });
   e.target.reset();
   await loadAllData();
@@ -1119,7 +1172,10 @@ async function loadTrips() {
   if (!allTrips.length) { el.innerHTML = '<div class="card"><div class="empty-state">No trips yet — start planning one above! ✈️</div></div>'; return; }
   el.innerHTML = allTrips.map(t => `
     <div class="card trip-card" onclick="openTripModal('${t.id}')">
-      <div class="section-title" style="margin-bottom:4px;">🌍 ${escapeHtml(t.name)}</div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+        <div class="section-title" style="margin-bottom:4px;">🌍 ${escapeHtml(t.name)}</div>
+        ${t.rating != null ? `<div class="trip-rating-badge">${t.rating}<span>/100</span></div>` : ''}
+      </div>
       <div class="trip-dates">${t.startDate ? fmtDate(t.startDate) + ' – ' + fmtDate(t.endDate) : 'Dates not set yet'}</div>
       <div class="item-sub" style="margin-top:6px;">${(t.pros||[]).length} pros · ${(t.cons||[]).length} cons</div>
     </div>
@@ -1147,6 +1203,10 @@ function openTripModal(id) {
     </div>
 
     <div class="info-grid">
+      <div class="info-box">
+        <div class="label">⭐ Rate this trip idea</div>
+        <input type="number" id="trip-rating-${id}" min="0" max="100" value="${t.rating != null ? t.rating : ''}" placeholder="0–100">
+      </div>
       <div class="info-box" style="grid-column: 1 / -1;">
         <div class="label">☀️ Typical weather (auto, based on cities & dates)</div>
         <div id="trip-autoweather-${id}" style="font-size:13px; margin-top:4px; white-space:pre-line;">${escapeHtml(computeAutoWeather(t.cities, t.startDate, t.endDate))}</div>
@@ -1219,6 +1279,8 @@ function openTripModal(id) {
   });
 }
 async function saveTripInfo(id) {
+  const ratingRaw = document.getElementById(`trip-rating-${id}`).value;
+  const rating = ratingRaw === '' ? null : Math.max(0, Math.min(100, parseInt(ratingRaw, 10)));
   await api('/api/trips/' + id, 'PUT', {
     name: document.getElementById(`trip-name-${id}`).value,
     startDate: document.getElementById(`trip-start-${id}`).value,
@@ -1227,7 +1289,8 @@ async function saveTripInfo(id) {
     weatherInfo: document.getElementById(`trip-weather-${id}`).value,
     thingsToDo: document.getElementById(`trip-todo-${id}`).value,
     flightEconomyPrice: document.getElementById(`trip-econ-${id}`).value,
-    flightBusinessPrice: document.getElementById(`trip-biz-${id}`).value
+    flightBusinessPrice: document.getElementById(`trip-biz-${id}`).value,
+    rating
   });
   await loadAllData();
   loadTrips();
@@ -1335,13 +1398,14 @@ document.getElementById('gallery-form').addEventListener('submit', async e => {
     statusEl.textContent = 'Upload failed — try a different photo.';
   }
 });
+let allGalleryPhotos = [];
 async function loadGallery() {
-  const photos = await api('/api/gallery');
+  allGalleryPhotos = await api('/api/gallery');
   const el = document.getElementById('gallery-grid');
-  if (!photos.length) { el.innerHTML = '<div class="empty-state">No photos yet — add your first key moment above! 📸</div>'; return; }
-  el.innerHTML = [...photos].reverse().map(p => `
+  if (!allGalleryPhotos.length) { el.innerHTML = '<div class="empty-state">No photos yet — add your first key moment above! 📸</div>'; return; }
+  el.innerHTML = [...allGalleryPhotos].reverse().map(p => `
     <div class="gallery-item">
-      <img src="${p.url}" alt="${escapeHtml(p.caption)}" loading="lazy">
+      <img src="${p.url}" alt="${escapeHtml(p.caption)}" loading="lazy" onclick="openLightboxById('${p.id}')">
       <button class="gallery-delete" onclick="deleteGalleryPhoto('${p.id}')" title="Delete">🗑️</button>
       <div class="gallery-caption">
         ${p.caption ? `<div>${escapeHtml(p.caption)}</div>` : ''}
@@ -1355,6 +1419,22 @@ async function deleteGalleryPhoto(id) {
   await api('/api/gallery/' + id, 'DELETE');
   loadGallery();
 }
+
+// ---------- Photo lightbox (view full-size) ----------
+function openLightboxById(id) {
+  const p = allGalleryPhotos.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('lightbox-img').src = p.url;
+  document.getElementById('lightbox-caption').textContent = [p.caption, memberName(p.person)].filter(Boolean).join(' · ');
+  document.getElementById('photo-lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('photo-lightbox').classList.remove('open');
+  document.getElementById('lightbox-img').src = '';
+}
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+document.getElementById('photo-lightbox').addEventListener('click', e => { if (e.target.id === 'photo-lightbox') closeLightbox(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
 // ---------- Budget ----------
 document.getElementById('budget-form').addEventListener('submit', async e => {
@@ -1478,6 +1558,7 @@ async function init() {
   MEMBERS = await api('/api/members');
   fillPersonSelects();
   renderMemberFilters();
+  populateCitySelect();
   updateClock();
   setInterval(updateClock, 30000);
   loadWeather();
