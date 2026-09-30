@@ -243,11 +243,21 @@
 
   /* ---------- Gallery ---------- */
   .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
-  .gallery-item { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--card); position: relative; }
-  .gallery-item img { width: 100%; height: 140px; object-fit: cover; display: block; cursor: zoom-in; }
-  .gallery-caption { padding: 8px 10px; font-size: 12.5px; }
+  .gallery-item { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--card); position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; transition: transform 0.12s, box-shadow 0.12s; }
+  .gallery-item img { width: 100%; height: 140px; object-fit: cover; display: block; cursor: zoom-in; -webkit-user-drag: none; }
+  .gallery-item.size-small img { height: 90px; }
+  .gallery-item.size-large img { height: 240px; }
+  .gallery-item.dragging { opacity: 0.55; transform: scale(1.04); box-shadow: 0 10px 24px var(--shadow); z-index: 5; cursor: grabbing; }
+  .gallery-item.drop-target { outline: 2px dashed var(--turquoise); outline-offset: -2px; }
+  .gallery-caption { padding: 8px 10px 2px; font-size: 12.5px; }
   .gallery-caption .cap-person { color: var(--muted); font-weight: 700; font-size: 11px; }
-  .gallery-delete { position: absolute; top: 6px; right: 6px; background: rgba(255,255,255,0.85); border: none; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; }
+  .gallery-actions { display: flex; gap: 6px; padding: 8px 10px 10px; }
+  .gallery-actions button {
+    flex: 1; background: var(--beige); border: 1px solid var(--border); border-radius: 8px;
+    font-size: 11px; font-weight: 700; color: var(--ink); padding: 5px 4px; cursor: pointer;
+  }
+  .gallery-actions button:hover { background: var(--border); }
+  .gallery-actions button.danger { background: var(--blush); border-color: var(--blush); }
 
   /* ---------- Photo lightbox ---------- */
   .lightbox-backdrop { display: none; position: fixed; inset: 0; background: rgba(15,30,27,0.94); z-index: 200; padding: 24px; flex-direction: column; align-items: center; justify-content: center; }
@@ -1403,21 +1413,90 @@ async function loadGallery() {
   allGalleryPhotos = await api('/api/gallery');
   const el = document.getElementById('gallery-grid');
   if (!allGalleryPhotos.length) { el.innerHTML = '<div class="empty-state">No photos yet — add your first key moment above! 📸</div>'; return; }
-  el.innerHTML = [...allGalleryPhotos].reverse().map(p => `
-    <div class="gallery-item">
+  // Array order === display order (newest uploads are unshifted server-side,
+  // and drag-reordering rewrites this same order), so no client-side sort/reverse.
+  el.innerHTML = allGalleryPhotos.map(p => `
+    <div class="gallery-item size-${p.size || 'medium'}" data-id="${p.id}">
       <img src="${p.url}" alt="${escapeHtml(p.caption)}" loading="lazy" onclick="openLightboxById('${p.id}')">
-      <button class="gallery-delete" onclick="deleteGalleryPhoto('${p.id}')" title="Delete">🗑️</button>
       <div class="gallery-caption">
         ${p.caption ? `<div>${escapeHtml(p.caption)}</div>` : ''}
         <div class="cap-person">${memberName(p.person)}</div>
       </div>
+      <div class="gallery-actions">
+        <button class="danger" onclick="deleteGalleryPhoto('${p.id}')" title="Delete">🗑️ Trash</button>
+        <button onclick="cycleGalleryPhotoSize('${p.id}')" title="Resize">⤢ Resize</button>
+      </div>
     </div>
   `).join('');
+  initGalleryDrag();
 }
 async function deleteGalleryPhoto(id) {
   if (!confirm('Delete this photo?')) return;
   await api('/api/gallery/' + id, 'DELETE');
   loadGallery();
+}
+async function cycleGalleryPhotoSize(id) {
+  const p = allGalleryPhotos.find(x => x.id === id);
+  if (!p) return;
+  const sizes = ['small', 'medium', 'large'];
+  const next = sizes[(sizes.indexOf(p.size || 'medium') + 1) % sizes.length];
+  p.size = next;
+  document.querySelector(`.gallery-item[data-id="${id}"]`).className = `gallery-item size-${next}`;
+  await api('/api/gallery/' + id, 'PUT', { size: next });
+}
+
+// ---------- Gallery reorder (press-and-hold drag) ----------
+function initGalleryDrag() {
+  const grid = document.getElementById('gallery-grid');
+  const LONG_PRESS_MS = 350;
+  const MOVE_CANCEL_PX = 8;
+  let pressTimer = null, dragEl = null, startX = 0, startY = 0, dragging = false;
+
+  grid.querySelectorAll('.gallery-item').forEach(item => {
+    item.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.gallery-actions')) return; // don't hijack button taps
+      startX = e.clientX; startY = e.clientY;
+      pressTimer = setTimeout(() => {
+        dragging = true;
+        dragEl = item;
+        item.classList.add('dragging');
+        item.setPointerCapture(e.pointerId);
+      }, LONG_PRESS_MS);
+    });
+    item.addEventListener('pointermove', (e) => {
+      if (!dragging) {
+        if (pressTimer && (Math.abs(e.clientX - startX) > MOVE_CANCEL_PX || Math.abs(e.clientY - startY) > MOVE_CANCEL_PX)) {
+          clearTimeout(pressTimer); pressTimer = null;
+        }
+        return;
+      }
+      e.preventDefault();
+      const target = document.elementFromPoint(e.clientX, e.clientY);
+      const overItem = target && target.closest('.gallery-item');
+      grid.querySelectorAll('.gallery-item.drop-target').forEach(el => el.classList.remove('drop-target'));
+      if (overItem && overItem !== dragEl) {
+        overItem.classList.add('drop-target');
+        const rect = overItem.getBoundingClientRect();
+        const before = e.clientX < rect.left + rect.width / 2;
+        overItem.parentNode.insertBefore(dragEl, before ? overItem : overItem.nextSibling);
+      }
+    });
+    item.addEventListener('pointerup', async (e) => {
+      clearTimeout(pressTimer); pressTimer = null;
+      if (!dragging) return;
+      dragging = false;
+      item.classList.remove('dragging');
+      grid.querySelectorAll('.gallery-item.drop-target').forEach(el => el.classList.remove('drop-target'));
+      const order = [...grid.querySelectorAll('.gallery-item')].map(el => el.dataset.id);
+      await api('/api/gallery/reorder', 'PUT', { order });
+      allGalleryPhotos = order.map(id => allGalleryPhotos.find(p => p.id === id)).filter(Boolean);
+    });
+    item.addEventListener('pointercancel', () => {
+      clearTimeout(pressTimer); pressTimer = null;
+      if (dragEl) dragEl.classList.remove('dragging');
+      dragging = false;
+    });
+  });
 }
 
 // ---------- Photo lightbox (view full-size) ----------

@@ -259,8 +259,8 @@ async function handleAPI(req, res, urlPath) {
     const photoId = id();
     const savedFileName = `${photoId}.${ext}`;
     fs.writeFileSync(path.join(GALLERY_DIR, savedFileName), buffer);
-    const item = { id: photoId, caption: caption || '', person: person || 'family', url: `/gallery-photos/${savedFileName}`, createdAt: new Date().toISOString() };
-    db.gallery.push(item);
+    const item = { id: photoId, caption: caption || '', person: person || 'family', url: `/gallery-photos/${savedFileName}`, size: 'medium', createdAt: new Date().toISOString() };
+    db.gallery.unshift(item); // newest first; array order is the display order (also what drag-reorder rearranges)
     saveDB(db);
     return sendJSON(res, 201, item);
   }
@@ -275,6 +275,17 @@ async function handleAPI(req, res, urlPath) {
     }
     saveDB(db);
     return sendJSON(res, 200, removed);
+  }
+  // Gallery reorder: persist a full drag-and-drop reordering in one shot
+  if (resource === 'gallery' && itemId === 'reorder' && req.method === 'PUT') {
+    const body = await readBody(req);
+    const order = Array.isArray(body.order) ? body.order : [];
+    const byId = new Map(db.gallery.map(p => [p.id, p]));
+    const reordered = order.map(pid => byId.get(pid)).filter(Boolean);
+    db.gallery.forEach(p => { if (!order.includes(p.id)) reordered.push(p); }); // safety net for any id the client missed
+    db.gallery = reordered;
+    saveDB(db);
+    return sendJSON(res, 200, db.gallery);
   }
 
   if (collections.includes(resource)) {
