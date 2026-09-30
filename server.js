@@ -259,7 +259,7 @@ async function handleAPI(req, res, urlPath) {
     const photoId = id();
     const savedFileName = `${photoId}.${ext}`;
     fs.writeFileSync(path.join(GALLERY_DIR, savedFileName), buffer);
-    const item = { id: photoId, caption: caption || '', person: person || 'family', url: `/gallery-photos/${savedFileName}`, size: 'medium', createdAt: new Date().toISOString() };
+    const item = { id: photoId, caption: caption || '', person: person || 'family', url: `/gallery-photos/${savedFileName}`, focalX: 50, focalY: 50, createdAt: new Date().toISOString() };
     db.gallery.unshift(item); // newest first; array order is the display order (also what drag-reorder rearranges)
     saveDB(db);
     return sendJSON(res, 201, item);
