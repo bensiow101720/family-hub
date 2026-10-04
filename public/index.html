@@ -1791,22 +1791,28 @@ function fmtRating(n) {
 // Each con knocks 5% off the average rating (cumulative), floored at 0 — a
 // trip can look great on paper but score lower once its downsides are weighed in.
 const CON_PENALTY_PERCENT = 5;
+// Each pro adds 1% to the average rating (cumulative, uncapped — ratings
+// already have no upper limit) — upsides nudge the score back up.
+const PRO_BONUS_PERCENT = 1;
 function consPenaltyFactor(consCount) {
   return Math.max(0, 1 - (CON_PENALTY_PERCENT * consCount) / 100);
 }
-function adjustedRating(avg, consCount) {
-  return avg == null ? null : avg * consPenaltyFactor(consCount);
+function prosBonusFactor(prosCount) {
+  return 1 + (PRO_BONUS_PERCENT * prosCount) / 100;
+}
+function adjustedRating(avg, consCount, prosCount) {
+  return avg == null ? null : avg * consPenaltyFactor(consCount) * prosBonusFactor(prosCount || 0);
 }
 const TRIP_MEDALS = ['🥇', '🥈', '🥉'];
 async function loadTrips() {
   allTrips = await api('/api/trips');
   const el = document.getElementById('trips-container');
   if (!allTrips.length) { el.innerHTML = '<div class="card"><div class="empty-state">No trips yet — start planning one above! ✈️</div></div>'; return; }
-  // Highest-scoring first (score = average rating minus the cons penalty);
+  // Highest-scoring first (score = average rating, -5%/con, +1%/pro);
   // unrated trips keep their original order at the bottom.
   const ranked = [...allTrips].sort((a, b) => {
-    const adjA = adjustedRating(avgRating(a.ratings), (a.cons || []).length);
-    const adjB = adjustedRating(avgRating(b.ratings), (b.cons || []).length);
+    const adjA = adjustedRating(avgRating(a.ratings), (a.cons || []).length, (a.pros || []).length);
+    const adjB = adjustedRating(avgRating(b.ratings), (b.cons || []).length, (b.pros || []).length);
     if (adjA == null && adjB == null) return 0;
     if (adjA == null) return 1;
     if (adjB == null) return -1;
@@ -1816,10 +1822,12 @@ async function loadTrips() {
     const avg = avgRating(t.ratings);
     const n = ratingValues(t.ratings).length;
     const consCount = (t.cons || []).length;
-    const adjusted = adjustedRating(avg, consCount);
+    const prosCount = (t.pros || []).length;
+    const adjusted = adjustedRating(avg, consCount, prosCount);
     const medal = adjusted != null ? TRIP_MEDALS[i] : null;
     const details = [];
     if (n > 1) details.push(`avg of ${n}`);
+    if (prosCount > 0) details.push(`+${prosCount * PRO_BONUS_PERCENT}% for ${prosCount} pro${prosCount > 1 ? 's' : ''}`);
     if (consCount > 0) details.push(`-${consCount * CON_PENALTY_PERCENT}% for ${consCount} con${consCount > 1 ? 's' : ''}`);
     return `
     <div class="card trip-card" onclick="openTripModal('${t.id}')">
@@ -1847,7 +1855,8 @@ function openTripModal(id) {
   const cities = (t.cities || '').split(',').map(c => c.trim()).filter(Boolean);
   const modalAvg = avgRating(t.ratings);
   const modalConsCount = (t.cons || []).length;
-  const modalAdjusted = adjustedRating(modalAvg, modalConsCount);
+  const modalProsCount = (t.pros || []).length;
+  const modalAdjusted = adjustedRating(modalAvg, modalConsCount, modalProsCount);
   document.getElementById('trip-modal-body').innerHTML = `
     <div class="edit-form" style="margin-bottom:14px;">
       <input type="text" id="trip-name-${id}" value="${escapeHtml(t.name)}" style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:17px;">
@@ -1872,7 +1881,10 @@ function openTripModal(id) {
         </div>
         <div class="rating-result">
           ${modalAvg != null
-            ? `Overall score: <strong>${fmtRating(modalAdjusted)}</strong>/100 <span>(raw avg ${fmtRating(modalAvg)}${modalConsCount > 0 ? ` · -${modalConsCount * CON_PENALTY_PERCENT}% for ${modalConsCount} con${modalConsCount > 1 ? 's' : ''}` : ''})</span>`
+            ? `Overall score: <strong>${fmtRating(modalAdjusted)}</strong>/100 <span>(raw avg ${fmtRating(modalAvg)}${[
+                modalProsCount > 0 ? `+${modalProsCount * PRO_BONUS_PERCENT}% for ${modalProsCount} pro${modalProsCount > 1 ? 's' : ''}` : '',
+                modalConsCount > 0 ? `-${modalConsCount * CON_PENALTY_PERCENT}% for ${modalConsCount} con${modalConsCount > 1 ? 's' : ''}` : ''
+              ].filter(Boolean).map(s => ` · ${s}`).join('')})</span>`
             : `<span>No ratings yet</span>`}
         </div>
       </div>
