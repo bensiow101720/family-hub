@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Siow Hub</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>(function(){try{var t=localStorage.getItem('whub_theme');document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'light');}catch(e){}})();</script>
 <style>
   :root {
     --beige: #EFF9F6;
@@ -36,6 +34,46 @@
     --radius-lg: 24px;
     --radius-md: 16px;
     --radius-sm: 11px;
+    /* Glass surface tokens: re-themed as a whole under [data-theme="dark"] below */
+    --surface-1: rgba(255,255,255,0.45);
+    --surface-2: rgba(255,255,255,0.55);
+    --surface-hover: rgba(255,255,255,0.88);
+    --surface-3: rgba(255,255,255,0.82);
+    --surface-strong: rgba(255,255,255,0.92);
+    --surface-ghost: rgba(255,255,255,0.6);
+    --today-mask: rgba(255,255,255,0.78);
+    --input-solid-focus: #ffffff;
+    --dot-ring: rgba(255,255,255,0.5);
+    --danger-tint: #fde4e1;
+    --bg-glow-1: rgba(61,169,252,0.16);
+    --bg-glow-2: rgba(166,107,255,0.15);
+    --bg-glow-3: rgba(46,196,182,0.16);
+  }
+  :root[data-theme="dark"] {
+    --beige: #0D1A17;
+    --card: rgba(255,255,255,0.06);
+    --card-solid: #182622;
+    --ink: #EAF3F0;
+    --muted: #8FA6A0;
+    --border: rgba(255,255,255,0.14);
+    --glass-border: rgba(255,255,255,0.14);
+    --shadow: rgba(0,0,0,0.4);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 10px 26px -8px rgba(0,0,0,0.5);
+    --shadow-lg: 0 24px 56px -14px rgba(0,0,0,0.6);
+    --surface-1: rgba(255,255,255,0.05);
+    --surface-2: rgba(255,255,255,0.07);
+    --surface-hover: rgba(255,255,255,0.14);
+    --surface-3: rgba(255,255,255,0.08);
+    --surface-strong: rgba(23,36,32,0.92);
+    --surface-ghost: rgba(255,255,255,0.08);
+    --today-mask: rgba(23,36,32,0.82);
+    --input-solid-focus: #20302b;
+    --dot-ring: rgba(0,0,0,0.4);
+    --danger-tint: rgba(255,107,91,0.18);
+    --bg-glow-1: rgba(61,169,252,0.22);
+    --bg-glow-2: rgba(166,107,255,0.22);
+    --bg-glow-3: rgba(46,196,182,0.2);
   }
   * { box-sizing: border-box; }
   ::-webkit-scrollbar { width: 11px; height: 11px; }
@@ -46,16 +84,17 @@
     margin: 0;
     min-height: 100vh;
     background:
-      radial-gradient(1100px 620px at 6% -8%, rgba(61,169,252,0.16), transparent 60%),
-      radial-gradient(900px 700px at 102% 2%, rgba(166,107,255,0.15), transparent 55%),
-      radial-gradient(1000px 820px at 46% 115%, rgba(46,196,182,0.16), transparent 60%),
+      radial-gradient(1100px 620px at 6% -8%, var(--bg-glow-1), transparent 60%),
+      radial-gradient(900px 700px at 102% 2%, var(--bg-glow-2), transparent 55%),
+      radial-gradient(1000px 820px at 46% 115%, var(--bg-glow-3), transparent 60%),
       var(--beige);
     color: var(--ink);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
   h1, h2, h3, h4, .heading {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif;
     font-weight: 700;
     letter-spacing: -0.01em;
     margin: 0;
@@ -80,7 +119,7 @@
     gap: 14px;
     padding: 18px 20px 12px;
   }
-  .brand { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; letter-spacing: -0.01em; font-size: 23px; display: flex; align-items: center; gap: 8px; }
+  .brand { font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; font-weight: 800; letter-spacing: -0.01em; font-size: 23px; display: flex; align-items: center; gap: 8px; }
   .brand-text { background: linear-gradient(135deg, var(--turquoise) 0%, var(--lavender) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .weather-clock {
     display: flex; align-items: center; gap: 14px;
@@ -90,14 +129,25 @@
   }
   .weather-clock .seg { text-align: right; }
   .weather-clock .label { font-size: 10.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
-  .weather-clock .value { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 16px; }
+  .weather-clock .value { font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; font-weight: 700; font-size: 16px; }
   .weather-clock .icon { font-size: 24px; }
   .city-select {
     font-size: 10.5px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
-    background: none; border: none; padding: 0; margin: 0 0 2px; cursor: pointer; font-family: 'Inter', sans-serif;
+    background: none; border: none; padding: 0; margin: 0 0 2px; cursor: pointer; font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif;
     -webkit-appearance: none; appearance: none;
   }
   .city-select:focus { outline: none; }
+  .theme-toggle {
+    display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+    background: var(--card); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--glass-border); box-shadow: var(--shadow-sm), var(--shadow-md); cursor: pointer; color: var(--ink);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .theme-toggle:hover { transform: translateY(-1px) rotate(12deg); box-shadow: var(--shadow-md); }
+  .theme-toggle .icon-sun { display: none; }
+  .theme-toggle .icon-moon { display: block; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
   /* ---------- Layout: sidebar + content ---------- */
   .layout { display: flex; align-items: flex-start; }
@@ -121,7 +171,7 @@
     width: 100%;
     aspect-ratio: 1;
     border: 1px solid transparent;
-    background: rgba(255,255,255,0.45);
+    background: var(--surface-1);
     border-radius: var(--radius-md);
     font-size: 22px;
     cursor: pointer;
@@ -129,11 +179,11 @@
     position: relative;
     transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
   }
-  .sidebar button:hover { background: rgba(255,255,255,0.9); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .sidebar button:hover { background: var(--surface-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
   .sidebar button.active { background: var(--gold-grad); box-shadow: 0 8px 18px -6px rgba(255,201,63,0.6); transform: translateY(-1px); }
   .sidebar button .tip {
     position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
-    background: var(--ink); color: white; font-size: 12px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700;
+    background: var(--ink); color: white; font-size: 12px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; font-weight: 700;
     padding: 5px 11px; border-radius: 9px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s;
     z-index: 20; box-shadow: var(--shadow-md);
   }
@@ -144,7 +194,7 @@
   .members { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 18px; }
   .chip {
     border: 1px solid var(--glass-border); border-radius: 999px; padding: 8px 18px;
-    font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px;
+    font-weight: 700; font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; font-size: 14px;
     cursor: pointer; background: var(--card); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     user-select: none; box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
@@ -162,10 +212,10 @@
   }
   .cal-nav button:hover { background: var(--gold-grad); border-color: transparent; transform: translateY(-1px); box-shadow: var(--shadow-md); }
   .cal-title { font-size: 22px; min-width: 190px; text-align: center; }
-  .view-toggle { display: flex; gap: 6px; background: rgba(255,255,255,0.5); padding: 4px; border-radius: 999px; border: 1px solid var(--glass-border); }
+  .view-toggle { display: flex; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: 999px; border: 1px solid var(--glass-border); }
   .view-toggle button {
     border: none; background: transparent; border-radius: 999px; padding: 7px 16px;
-    font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; color: var(--ink);
+    font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; color: var(--ink);
     transition: all 0.15s ease;
   }
   .view-toggle button.active { background: var(--gold-grad); color: var(--ink); box-shadow: 0 4px 12px -3px rgba(255,201,63,0.6); }
@@ -173,24 +223,24 @@
   /* ---------- Month grid ---------- */
   .two-month-grid { display: flex; flex-direction: column; gap: 28px; }
   .month-block { width: 100%; }
-  .month-block h5 { text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; margin-bottom: 8px; font-size: 17px; }
+  .month-block h5 { text-align: center; font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; font-weight: 700; margin-bottom: 8px; font-size: 17px; }
   .weekday-row, .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
   .weekday-row { margin-bottom: 6px; }
   .weekday-row div { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
   .day-cell {
-    background: rgba(255,255,255,0.55); border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+    background: var(--surface-2); border: 1px solid var(--glass-border); border-radius: var(--radius-md);
     min-height: 128px; padding: 7px 8px; cursor: pointer;
     display: flex; flex-direction: column; gap: 3px;
     box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
-  .day-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); background: rgba(255,255,255,0.85); }
+  .day-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); background: var(--surface-hover); }
   .day-cell.other-month { opacity: 0.35; }
   .day-cell.today {
-    border: 2px solid transparent; background-image: linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.78)), linear-gradient(135deg, var(--turquoise), var(--gold));
+    border: 2px solid transparent; background-image: linear-gradient(var(--today-mask), var(--today-mask)), linear-gradient(135deg, var(--turquoise), var(--gold));
     background-origin: border-box; background-clip: padding-box, border-box;
     box-shadow: 0 0 0 4px rgba(255,210,63,0.18), var(--shadow-sm);
   }
-  .day-num { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 14px; }
+  .day-num { font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; font-weight: 700; font-size: 14px; }
   .day-item { font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: var(--shadow-sm); }
   .day-more { font-size: 10px; color: var(--muted); font-weight: 700; }
 
@@ -214,10 +264,10 @@
   /* ---------- Year grid ---------- */
   .year-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
   .mini-month {
-    background: rgba(255,255,255,0.55); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 12px; cursor: pointer;
+    background: var(--surface-2); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 12px; cursor: pointer;
     box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
-  .mini-month:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); background: rgba(255,255,255,0.85); }
+  .mini-month:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); background: var(--surface-hover); }
   .mini-month h4 { font-size: 14px; margin-bottom: 8px; text-align: center; }
   .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
   .mini-day { font-size: 9px; text-align: center; padding: 2px 0; border-radius: 4px; color: var(--muted); position: relative; }
@@ -228,19 +278,19 @@
   .panel.active { display: block; }
   .section-title { font-size: 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 
-  .item-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); margin-bottom: 9px; background: rgba(255,255,255,0.5); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+  .item-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); margin-bottom: 9px; background: var(--surface-2); transition: transform 0.15s ease, box-shadow 0.15s ease; }
   .item-row:hover { transform: translateX(2px); box-shadow: var(--shadow-sm); }
   .item-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-  .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 3px rgba(255,255,255,0.5); }
+  .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 3px var(--dot-ring); }
   .item-title { font-weight: 700; }
   .item-sub { font-size: 12.5px; color: var(--muted); font-weight: 600; }
   .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
   .icon-btn { border: none; background: none; cursor: pointer; font-size: 15px; padding: 4px 6px; border-radius: 8px; transition: background 0.15s ease; }
   .icon-btn:hover { background: rgba(46,196,182,0.16); }
-  .empty-state { text-align: center; padding: 26px 10px; color: var(--muted); font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .empty-state { text-align: center; padding: 26px 10px; color: var(--muted); font-weight: 700; font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; }
 
   .btn {
-    border: none; border-radius: 999px; padding: 11px 22px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; cursor: pointer;
+    border: none; border-radius: 999px; padding: 11px 22px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; font-weight: 700; cursor: pointer;
     background: var(--gold-grad); color: var(--ink); box-shadow: 0 8px 18px -6px rgba(255,201,63,0.55), var(--shadow-sm);
     transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
   }
@@ -248,19 +298,19 @@
   .btn:active { transform: translateY(0) scale(0.98); }
   .btn.small { padding: 7px 16px; font-size: 13px; box-shadow: var(--shadow-sm); }
   .btn.danger { background: var(--blush-grad); color: #fff; box-shadow: 0 8px 18px -6px rgba(255,107,91,0.55), var(--shadow-sm); }
-  .btn.ghost { background: rgba(255,255,255,0.6); border: 1px solid var(--glass-border); color: var(--ink); box-shadow: var(--shadow-sm); }
+  .btn.ghost { background: var(--surface-ghost); border: 1px solid var(--glass-border); color: var(--ink); box-shadow: var(--shadow-sm); }
 
   form.add-form { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
   input, select, textarea {
-    font-family: 'Inter', sans-serif; font-weight: 600; border: 1px solid var(--border); border-radius: var(--radius-sm);
-    padding: 10px 13px; font-size: 14px; background: rgba(255,255,255,0.85); color: var(--ink);
+    font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; font-weight: 600; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 10px 13px; font-size: 14px; background: var(--surface-3); color: var(--ink);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--turquoise); background: #fff; box-shadow: 0 0 0 3px rgba(46,196,182,0.18); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--turquoise); background: var(--input-solid-focus); box-shadow: 0 0 0 3px rgba(46,196,182,0.18); }
   input[type="text"] { flex: 1; min-width: 140px; }
   textarea { width: 100%; resize: vertical; min-height: 70px; }
 
-  .checkbox { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(255,255,255,0.8); transition: all 0.15s ease; }
+  .checkbox { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--surface-3); transition: all 0.15s ease; }
   .checkbox.done { background: linear-gradient(135deg, #D7F074, var(--sage)); border-color: transparent; box-shadow: 0 4px 10px -3px rgba(182,226,59,0.6); }
   .checkbox.done::after { content: "✓"; color: white; font-weight: 800; font-size: 13px; }
   .done-text { text-decoration: line-through; opacity: 0.55; }
@@ -276,7 +326,7 @@
   }
   .modal-backdrop.open { opacity: 1; visibility: visible; pointer-events: auto; }
   .modal {
-    background: rgba(255,255,255,0.92); backdrop-filter: blur(26px) saturate(160%); -webkit-backdrop-filter: blur(26px) saturate(160%);
+    background: var(--surface-strong); backdrop-filter: blur(26px) saturate(160%); -webkit-backdrop-filter: blur(26px) saturate(160%);
     border-radius: var(--radius-lg); padding: 24px; max-width: 460px; width: 100%; max-height: 85vh; overflow-y: auto;
     box-shadow: var(--shadow-lg); transform: scale(0.96) translateY(10px); transition: transform 0.22s ease;
   }
@@ -304,7 +354,7 @@
   .trip-dates { color: var(--muted); font-weight: 700; font-size: 13px; }
   .trip-medal { position: absolute; top: -10px; left: -10px; font-size: 26px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); line-height: 1; }
   .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 10px; margin: 12px 0; }
-  .info-box { background: rgba(255,255,255,0.55); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 11px 13px; }
+  .info-box { background: var(--surface-2); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 11px 13px; }
   .info-box .label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
   .proscons-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
   .proscons-col h4 { margin-bottom: 8px; }
@@ -335,17 +385,17 @@
     cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s ease;
   }
   .cool-photo-item .cool-delete-btn:hover { background: #C0463C; }
-  .audio-item { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border: 1px solid var(--glass-border); border-radius: var(--radius-md); margin-bottom: 10px; flex-wrap: wrap; background: rgba(255,255,255,0.5); box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+  .audio-item { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border: 1px solid var(--glass-border); border-radius: var(--radius-md); margin-bottom: 10px; flex-wrap: wrap; background: var(--surface-2); box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; }
   .audio-item:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
   .audio-item .audio-meta { font-weight: 700; font-size: 13.5px; color: var(--ink); min-width: 110px; }
   .audio-item .audio-sub { font-size: 11.5px; color: var(--muted); font-weight: 600; display: block; }
   .audio-item audio { flex: 1; min-width: 220px; height: 36px; }
   .audio-delete-btn { background: none; border: none; color: #C0463C; font-weight: 700; cursor: pointer; font-size: 13px; padding: 6px 10px; border-radius: 8px; flex-shrink: 0; transition: background 0.15s ease; }
-  .audio-delete-btn:hover { background: #fde4e1; }
+  .audio-delete-btn:hover { background: var(--danger-tint); }
 
   /* Long-press action menu (replaces the phone's native image menu) */
   .photo-menu {
-    position: fixed; z-index: 150; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
+    position: fixed; z-index: 150; background: var(--surface-strong); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
     border: 1px solid var(--glass-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); overflow: hidden;
     opacity: 0; transform: scale(0.95); pointer-events: none; transition: opacity 0.15s ease, transform 0.15s ease;
   }
@@ -377,12 +427,12 @@
   }
   .lightbox-backdrop.open { opacity: 1; visibility: visible; pointer-events: auto; }
   .lightbox-backdrop img { max-width: 92vw; max-height: 82vh; border-radius: var(--radius-md); box-shadow: 0 20px 60px rgba(0,0,0,0.55); }
-  .lightbox-caption { color: #fff; margin-top: 16px; font-weight: 700; text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .lightbox-caption { color: #fff; margin-top: 16px; font-weight: 700; text-align: center; font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; }
   .lightbox-close { position: absolute; top: 18px; right: 22px; background: rgba(255,255,255,0.18); border: none; color: #fff; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; transition: background 0.15s ease; }
   .lightbox-close:hover { background: rgba(255,255,255,0.3); }
 
   /* ---------- Trip rating ---------- */
-  .trip-rating-badge { background: var(--gold-grad); color: var(--ink); font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 15px; padding: 5px 12px; border-radius: 13px; text-align: center; flex-shrink: 0; box-shadow: 0 6px 16px -5px rgba(255,201,63,0.6); }
+  .trip-rating-badge { background: var(--gold-grad); color: var(--ink); font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; font-weight: 800; font-size: 15px; padding: 5px 12px; border-radius: 13px; text-align: center; flex-shrink: 0; box-shadow: 0 6px 16px -5px rgba(255,201,63,0.6); }
   .trip-rating-badge span { display: block; font-size: 9.5px; font-weight: 700; opacity: 0.75; white-space: nowrap; }
   .ratings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 4px; }
   .rating-row { display: flex; flex-direction: column; gap: 3px; }
@@ -396,8 +446,8 @@
   .budget-table td { padding: 8px; border-top: 1px solid var(--border); }
   .budget-table tbody tr:hover td { background: rgba(46,196,182,0.08); }
   .budget-table td input { width: 100%; border: none; background: transparent; padding: 4px; }
-  .budget-table td input:focus { background: rgba(255,255,255,0.8); border-radius: 6px; }
-  .budget-table tfoot td { font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; border-top: 2px solid var(--border); }
+  .budget-table td input:focus { background: var(--surface-3); border-radius: 6px; }
+  .budget-table tfoot td { font-weight: 700; font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; border-top: 2px solid var(--border); }
   .budget-price { text-align: right; }
 </style>
 </head>
@@ -405,16 +455,22 @@
 
 <div class="topbar">
   <div class="brand"><span>🏡</span> <span class="brand-text">Siow Hub</span></div>
-  <div class="weather-clock">
-    <span class="icon" id="weather-icon">🌤️</span>
-    <div class="seg">
-      <select class="city-select" id="clock-city-select"></select>
-      <div class="value" id="weather-temp">--°C</div>
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div class="weather-clock">
+      <span class="icon" id="weather-icon">🌤️</span>
+      <div class="seg">
+        <select class="city-select" id="clock-city-select"></select>
+        <div class="value" id="weather-temp">--°C</div>
+      </div>
+      <div class="seg">
+        <div class="label" id="clock-date">--</div>
+        <div class="value" id="clock-time">--:--</div>
+      </div>
     </div>
-    <div class="seg">
-      <div class="label" id="clock-date">--</div>
-      <div class="value" id="clock-time">--:--</div>
-    </div>
+    <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+    </button>
   </div>
 </div>
 
@@ -866,22 +922,211 @@ document.querySelectorAll('#sidebar button').forEach(btn => {
 });
 
 // ---------- Clock & Weather (switchable city) ----------
+// Every sovereign country (plus Taiwan and Kosovo), each keyed to its
+// capital city's timezone/coordinates — generated from world-countries +
+// world-cities-json capital data and tz-lookup (see dev notes), not typed
+// by hand, to keep the timezone/coordinate pairs accurate.
 const WORLD_CITIES = [
-  { name: 'Singapore', tz: 'Asia/Singapore', lat: 1.3521, lon: 103.8198 },
-  { name: 'Hong Kong', tz: 'Asia/Hong_Kong', lat: 22.3193, lon: 114.1694 },
-  { name: 'Tokyo', tz: 'Asia/Tokyo', lat: 35.6762, lon: 139.6503 },
-  { name: 'Bangkok', tz: 'Asia/Bangkok', lat: 13.7563, lon: 100.5018 },
-  { name: 'Dubai', tz: 'Asia/Dubai', lat: 25.2048, lon: 55.2708 },
-  { name: 'London', tz: 'Europe/London', lat: 51.5072, lon: -0.1276 },
-  { name: 'Paris', tz: 'Europe/Paris', lat: 48.8566, lon: 2.3522 },
-  { name: 'New York', tz: 'America/New_York', lat: 40.7128, lon: -74.0060 },
-  { name: 'Los Angeles', tz: 'America/Los_Angeles', lat: 34.0522, lon: -118.2437 },
-  { name: 'Sydney', tz: 'Australia/Sydney', lat: -33.8688, lon: 151.2093 },
-  { name: 'Auckland', tz: 'Pacific/Auckland', lat: -36.8485, lon: 174.7633 }
+  { name: 'Afghanistan', tz: 'Asia/Kabul', lat: 34.5253, lon: 69.1783, capital: 'Kabul' },
+  { name: 'Albania', tz: 'Europe/Tirane', lat: 41.3289, lon: 19.8178, capital: 'Tirana' },
+  { name: 'Algeria', tz: 'Africa/Algiers', lat: 36.7539, lon: 3.0589, capital: 'Algiers' },
+  { name: 'Andorra', tz: 'Europe/Andorra', lat: 42.5, lon: 1.5, capital: 'Andorra la Vella' },
+  { name: 'Angola', tz: 'Africa/Luanda', lat: -8.8383, lon: 13.2344, capital: 'Luanda' },
+  { name: 'Antigua and Barbuda', tz: 'America/Antigua', lat: 17.1167, lon: -61.85, capital: 'Saint John’s' },
+  { name: 'Argentina', tz: 'America/Argentina/Buenos_Aires', lat: -34.5997, lon: -58.3819, capital: 'Buenos Aires' },
+  { name: 'Armenia', tz: 'Asia/Yerevan', lat: 40.1814, lon: 44.5144, capital: 'Yerevan' },
+  { name: 'Australia', tz: 'Australia/Sydney', lat: -35.2931, lon: 149.1269, capital: 'Canberra' },
+  { name: 'Austria', tz: 'Europe/Vienna', lat: 48.2083, lon: 16.3725, capital: 'Vienna' },
+  { name: 'Azerbaijan', tz: 'Asia/Baku', lat: 40.3667, lon: 49.8352, capital: 'Baku' },
+  { name: 'Bahamas', tz: 'America/Nassau', lat: 25.0781, lon: -77.3386, capital: 'Nassau' },
+  { name: 'Bahrain', tz: 'Asia/Bahrain', lat: 26.225, lon: 50.5775, capital: 'Manama' },
+  { name: 'Bangladesh', tz: 'Asia/Dhaka', lat: 23.7639, lon: 90.3889, capital: 'Dhaka' },
+  { name: 'Barbados', tz: 'America/Barbados', lat: 13.0975, lon: -59.6167, capital: 'Bridgetown' },
+  { name: 'Belarus', tz: 'Europe/Minsk', lat: 53.9, lon: 27.5667, capital: 'Minsk' },
+  { name: 'Belgium', tz: 'Europe/Brussels', lat: 50.8467, lon: 4.3525, capital: 'Brussels' },
+  { name: 'Belize', tz: 'America/Belize', lat: 17.2514, lon: -88.7669, capital: 'Belmopan' },
+  { name: 'Benin', tz: 'Africa/Porto-Novo', lat: 6.3667, lon: 2.4333, capital: 'Cotonou' },
+  { name: 'Bhutan', tz: 'Asia/Thimphu', lat: 27.4722, lon: 89.6361, capital: 'Thimphu' },
+  { name: 'Bolivia', tz: 'America/La_Paz', lat: -16.5, lon: -68.15, capital: 'La Paz' },
+  { name: 'Bosnia and Herzegovina', tz: 'Europe/Sarajevo', lat: 43.8564, lon: 18.4131, capital: 'Sarajevo' },
+  { name: 'Botswana', tz: 'Africa/Gaborone', lat: -24.6581, lon: 25.9122, capital: 'Gaborone' },
+  { name: 'Brazil', tz: 'America/Sao_Paulo', lat: -15.7939, lon: -47.8828, capital: 'Brasília' },
+  { name: 'Brunei', tz: 'Asia/Brunei', lat: 4.8903, lon: 114.9422, capital: 'Bandar Seri Begawan' },
+  { name: 'Bulgaria', tz: 'Europe/Sofia', lat: 42.7, lon: 23.33, capital: 'Sofia' },
+  { name: 'Burkina Faso', tz: 'Africa/Ouagadougou', lat: 12.3686, lon: -1.5275, capital: 'Ouagadougou' },
+  { name: 'Burundi', tz: 'Africa/Bujumbura', lat: -3.3833, lon: 29.3667, capital: 'Bujumbura' },
+  { name: 'Cambodia', tz: 'Asia/Phnom_Penh', lat: 11.5694, lon: 104.9211, capital: 'Phnom Penh' },
+  { name: 'Cameroon', tz: 'Africa/Douala', lat: 3.8667, lon: 11.5167, capital: 'Yaoundé' },
+  { name: 'Canada', tz: 'America/Toronto', lat: 45.4247, lon: -75.695, capital: 'Ottawa' },
+  { name: 'Cape Verde', tz: 'Atlantic/Cape_Verde', lat: 14.918, lon: -23.509, capital: 'Praia' },
+  { name: 'Central African Republic', tz: 'Africa/Bangui', lat: 4.3733, lon: 18.5628, capital: 'Bangui' },
+  { name: 'Chad', tz: 'Africa/Ndjamena', lat: 12.11, lon: 15.05, capital: 'N’Djamena' },
+  { name: 'Chile', tz: 'America/Santiago', lat: -33.4372, lon: -70.6506, capital: 'Santiago' },
+  { name: 'China', tz: 'Asia/Shanghai', lat: 39.904, lon: 116.4075, capital: 'Beijing' },
+  { name: 'Colombia', tz: 'America/Bogota', lat: 4.7111, lon: -74.0722, capital: 'Bogotá' },
+  { name: 'Comoros', tz: 'Indian/Comoro', lat: -11.699, lon: 43.256, capital: 'Moroni' },
+  { name: 'Costa Rica', tz: 'America/Costa_Rica', lat: 9.9325, lon: -84.08, capital: 'San José' },
+  { name: 'Croatia', tz: 'Europe/Zagreb', lat: 45.8167, lon: 15.9833, capital: 'Zagreb' },
+  { name: 'Cuba', tz: 'America/Havana', lat: 23.1367, lon: -82.3589, capital: 'Havana' },
+  { name: 'Cyprus', tz: 'Asia/Famagusta', lat: 35.1725, lon: 33.365, capital: 'Nicosia' },
+  { name: 'Czechia', tz: 'Europe/Prague', lat: 50.0875, lon: 14.4214, capital: 'Prague' },
+  { name: 'Denmark', tz: 'Europe/Copenhagen', lat: 55.6761, lon: 12.5683, capital: 'Copenhagen' },
+  { name: 'Djibouti', tz: 'Africa/Djibouti', lat: 11.5883, lon: 43.145, capital: 'Djibouti' },
+  { name: 'Dominica', tz: 'America/Dominica', lat: 15.3014, lon: -61.3883, capital: 'Roseau' },
+  { name: 'Dominican Republic', tz: 'America/Santo_Domingo', lat: 18.4764, lon: -69.8933, capital: 'Santo Domingo' },
+  { name: 'DR Congo', tz: 'Africa/Kinshasa', lat: -4.325, lon: 15.3222, capital: 'Kinshasa' },
+  { name: 'Ecuador', tz: 'America/Guayaquil', lat: -0.22, lon: -78.5125, capital: 'Quito' },
+  { name: 'Egypt', tz: 'Africa/Cairo', lat: 30.0444, lon: 31.2358, capital: 'Cairo' },
+  { name: 'El Salvador', tz: 'America/El_Salvador', lat: 13.6989, lon: -89.1914, capital: 'San Salvador' },
+  { name: 'Equatorial Guinea', tz: 'Africa/Malabo', lat: 3.75, lon: 8.7833, capital: 'Malabo' },
+  { name: 'Eritrea', tz: 'Africa/Asmara', lat: 15.3228, lon: 38.925, capital: 'Asmara' },
+  { name: 'Estonia', tz: 'Europe/Tallinn', lat: 59.4372, lon: 24.7453, capital: 'Tallinn' },
+  { name: 'Eswatini', tz: 'Africa/Mbabane', lat: -26.3208, lon: 31.1617, capital: 'Mbabane' },
+  { name: 'Ethiopia', tz: 'Africa/Addis_Ababa', lat: 9.03, lon: 38.74, capital: 'Addis Ababa' },
+  { name: 'Fiji', tz: 'Pacific/Fiji', lat: -18.1416, lon: 178.4419, capital: 'Suva' },
+  { name: 'Finland', tz: 'Europe/Helsinki', lat: 60.1708, lon: 24.9375, capital: 'Helsinki' },
+  { name: 'France', tz: 'Europe/Paris', lat: 48.8567, lon: 2.3522, capital: 'Paris' },
+  { name: 'Gabon', tz: 'Africa/Libreville', lat: 0.3903, lon: 9.4542, capital: 'Libreville' },
+  { name: 'Gambia', tz: 'Africa/Banjul', lat: 13.4531, lon: -16.5775, capital: 'Banjul' },
+  { name: 'Georgia', tz: 'Asia/Tbilisi', lat: 41.7225, lon: 44.7925, capital: 'Tbilisi' },
+  { name: 'Germany', tz: 'Europe/Berlin', lat: 52.52, lon: 13.405, capital: 'Berlin' },
+  { name: 'Ghana', tz: 'Africa/Accra', lat: 5.55, lon: -0.2, capital: 'Accra' },
+  { name: 'Greece', tz: 'Europe/Athens', lat: 37.9842, lon: 23.7281, capital: 'Athens' },
+  { name: 'Grenada', tz: 'America/Grenada', lat: 12.05, lon: -61.75, capital: 'Saint George’s' },
+  { name: 'Guatemala', tz: 'America/Guatemala', lat: 14.6099, lon: -90.5252, capital: 'Guatemala City' },
+  { name: 'Guinea', tz: 'Africa/Conakry', lat: 9.5092, lon: -13.7122, capital: 'Conakry' },
+  { name: 'Guinea-Bissau', tz: 'Africa/Bissau', lat: 11.85, lon: -15.5667, capital: 'Bissau' },
+  { name: 'Guyana', tz: 'America/Guyana', lat: 6.8058, lon: -58.1508, capital: 'Georgetown' },
+  { name: 'Haiti', tz: 'America/Port-au-Prince', lat: 18.5333, lon: -72.3333, capital: 'Port-au-Prince' },
+  { name: 'Honduras', tz: 'America/Tegucigalpa', lat: 14.1, lon: -87.2167, capital: 'Tegucigalpa' },
+  { name: 'Hungary', tz: 'Europe/Budapest', lat: 47.4925, lon: 19.0514, capital: 'Budapest' },
+  { name: 'Iceland', tz: 'Atlantic/Reykjavik', lat: 64.1467, lon: -21.94, capital: 'Reykjavík' },
+  { name: 'India', tz: 'Asia/Kolkata', lat: 28.6139, lon: 77.209, capital: 'New Delhi' },
+  { name: 'Indonesia', tz: 'Asia/Jakarta', lat: -6.175, lon: 106.8275, capital: 'Jakarta' },
+  { name: 'Iran', tz: 'Asia/Tehran', lat: 35.6892, lon: 51.3889, capital: 'Tehran' },
+  { name: 'Iraq', tz: 'Asia/Baghdad', lat: 33.3153, lon: 44.3661, capital: 'Baghdad' },
+  { name: 'Ireland', tz: 'Europe/Dublin', lat: 53.35, lon: -6.2603, capital: 'Dublin' },
+  { name: 'Israel', tz: 'Asia/Jerusalem', lat: 31.7784, lon: 35.2066, capital: 'Jerusalem' },
+  { name: 'Italy', tz: 'Europe/Rome', lat: 41.8931, lon: 12.4828, capital: 'Rome' },
+  { name: 'Ivory Coast', tz: 'Africa/Abidjan', lat: 5.3167, lon: -4.0333, capital: 'Abidjan' },
+  { name: 'Jamaica', tz: 'America/Jamaica', lat: 17.9714, lon: -76.7931, capital: 'Kingston' },
+  { name: 'Japan', tz: 'Asia/Tokyo', lat: 35.6897, lon: 139.6922, capital: 'Tokyo' },
+  { name: 'Jordan', tz: 'Asia/Amman', lat: 31.9497, lon: 35.9328, capital: 'Amman' },
+  { name: 'Kazakhstan', tz: 'Asia/Almaty', lat: 51.1472, lon: 71.4222, capital: 'Nur-Sultan' },
+  { name: 'Kenya', tz: 'Africa/Nairobi', lat: -1.2864, lon: 36.8172, capital: 'Nairobi' },
+  { name: 'Kiribati', tz: 'Pacific/Tarawa', lat: 1.3382, lon: 173.0176, capital: 'Tarawa' },
+  { name: 'Kosovo', tz: 'Europe/Belgrade', lat: 42.6633, lon: 21.1622, capital: 'Pristina' },
+  { name: 'Kuwait', tz: 'Asia/Kuwait', lat: 29.3697, lon: 47.9783, capital: 'Kuwait City' },
+  { name: 'Kyrgyzstan', tz: 'Asia/Bishkek', lat: 42.8747, lon: 74.6122, capital: 'Bishkek' },
+  { name: 'Laos', tz: 'Asia/Vientiane', lat: 17.9667, lon: 102.6, capital: 'Vientiane' },
+  { name: 'Latvia', tz: 'Europe/Riga', lat: 56.9489, lon: 24.1064, capital: 'Riga' },
+  { name: 'Lebanon', tz: 'Asia/Beirut', lat: 33.8869, lon: 35.5131, capital: 'Beirut' },
+  { name: 'Lesotho', tz: 'Africa/Maseru', lat: -29.31, lon: 27.48, capital: 'Maseru' },
+  { name: 'Liberia', tz: 'Africa/Monrovia', lat: 6.3133, lon: -10.8014, capital: 'Monrovia' },
+  { name: 'Libya', tz: 'Africa/Tripoli', lat: 32.8872, lon: 13.1914, capital: 'Tripoli' },
+  { name: 'Liechtenstein', tz: 'Europe/Vaduz', lat: 47.141, lon: 9.521, capital: 'Vaduz' },
+  { name: 'Lithuania', tz: 'Europe/Vilnius', lat: 54.6872, lon: 25.28, capital: 'Vilnius' },
+  { name: 'Luxembourg', tz: 'Europe/Luxembourg', lat: 49.6117, lon: 6.1319, capital: 'Luxembourg' },
+  { name: 'Madagascar', tz: 'Indian/Antananarivo', lat: -18.9333, lon: 47.5167, capital: 'Antananarivo' },
+  { name: 'Malawi', tz: 'Africa/Blantyre', lat: -13.9833, lon: 33.7833, capital: 'Lilongwe' },
+  { name: 'Malaysia', tz: 'Asia/Kuala_Lumpur', lat: 3.1478, lon: 101.6953, capital: 'Kuala Lumpur' },
+  { name: 'Maldives', tz: 'Indian/Maldives', lat: 4.1753, lon: 73.5089, capital: 'Male' },
+  { name: 'Mali', tz: 'Africa/Bamako', lat: 12.6458, lon: -7.9922, capital: 'Bamako' },
+  { name: 'Malta', tz: 'Europe/Malta', lat: 35.8983, lon: 14.5125, capital: 'Valletta' },
+  { name: 'Marshall Islands', tz: 'Pacific/Majuro', lat: 7.0833, lon: 171.3833, capital: 'Majuro' },
+  { name: 'Mauritania', tz: 'Africa/Nouakchott', lat: 18.0858, lon: -15.9785, capital: 'Nouakchott' },
+  { name: 'Mauritius', tz: 'Indian/Mauritius', lat: -20.1644, lon: 57.5042, capital: 'Port Louis' },
+  { name: 'Mexico', tz: 'America/Mexico_City', lat: 19.4333, lon: -99.1333, capital: 'Mexico City' },
+  { name: 'Micronesia', tz: 'Pacific/Pohnpei', lat: 6.9178, lon: 158.185, capital: 'Palikir' },
+  { name: 'Moldova', tz: 'Europe/Chisinau', lat: 47.0228, lon: 28.8353, capital: 'Chisinau' },
+  { name: 'Monaco', tz: 'Europe/Monaco', lat: 43.7333, lon: 7.4167, capital: 'Monaco' },
+  { name: 'Mongolia', tz: 'Asia/Ulaanbaatar', lat: 47.9203, lon: 106.9172, capital: 'Ulaanbaatar' },
+  { name: 'Montenegro', tz: 'Europe/Podgorica', lat: 42.4413, lon: 19.2629, capital: 'Podgorica' },
+  { name: 'Morocco', tz: 'Africa/Casablanca', lat: 34.0209, lon: -6.8416, capital: 'Rabat' },
+  { name: 'Mozambique', tz: 'Africa/Maputo', lat: -25.9667, lon: 32.5833, capital: 'Maputo' },
+  { name: 'Myanmar', tz: 'Asia/Yangon', lat: 16.795, lon: 96.16, capital: 'Rangoon' },
+  { name: 'Namibia', tz: 'Africa/Windhoek', lat: -22.57, lon: 17.0836, capital: 'Windhoek' },
+  { name: 'Nauru', tz: 'Pacific/Nauru', lat: -0.5477, lon: 166.9209, capital: 'Yaren' },
+  { name: 'Nepal', tz: 'Asia/Kathmandu', lat: 27.7172, lon: 85.324, capital: 'Kathmandu' },
+  { name: 'Netherlands', tz: 'Europe/Amsterdam', lat: 52.3728, lon: 4.8936, capital: 'Amsterdam' },
+  { name: 'New Zealand', tz: 'Pacific/Auckland', lat: -41.2889, lon: 174.7772, capital: 'Wellington' },
+  { name: 'Nicaragua', tz: 'America/Managua', lat: 12.1544, lon: -86.2738, capital: 'Managua' },
+  { name: 'Niger', tz: 'Africa/Niamey', lat: 13.515, lon: 2.1175, capital: 'Niamey' },
+  { name: 'Nigeria', tz: 'Africa/Lagos', lat: 9.0667, lon: 7.4833, capital: 'Abuja' },
+  { name: 'North Korea', tz: 'Asia/Pyongyang', lat: 39.0194, lon: 125.7381, capital: 'Pyongyang' },
+  { name: 'North Macedonia', tz: 'Europe/Skopje', lat: 41.9961, lon: 21.4317, capital: 'Skopje' },
+  { name: 'Norway', tz: 'Europe/Oslo', lat: 59.9133, lon: 10.7389, capital: 'Oslo' },
+  { name: 'Oman', tz: 'Asia/Muscat', lat: 23.6139, lon: 58.5922, capital: 'Muscat' },
+  { name: 'Pakistan', tz: 'Asia/Karachi', lat: 33.6931, lon: 73.0639, capital: 'Islamabad' },
+  { name: 'Palau', tz: 'Pacific/Palau', lat: 7.5006, lon: 134.6242, capital: 'Ngerulmud' },
+  { name: 'Panama', tz: 'America/Panama', lat: 8.9833, lon: -79.5167, capital: 'Panama City' },
+  { name: 'Papua New Guinea', tz: 'Pacific/Port_Moresby', lat: -9.4789, lon: 147.1494, capital: 'Port Moresby' },
+  { name: 'Paraguay', tz: 'America/Asuncion', lat: -25.3, lon: -57.6333, capital: 'Asunción' },
+  { name: 'Peru', tz: 'America/Lima', lat: -12.06, lon: -77.0375, capital: 'Lima' },
+  { name: 'Philippines', tz: 'Asia/Manila', lat: 14.5958, lon: 120.9772, capital: 'Manila' },
+  { name: 'Poland', tz: 'Europe/Warsaw', lat: 52.23, lon: 21.0111, capital: 'Warsaw' },
+  { name: 'Portugal', tz: 'Europe/Lisbon', lat: 38.7253, lon: -9.15, capital: 'Lisbon' },
+  { name: 'Qatar', tz: 'Asia/Qatar', lat: 25.2867, lon: 51.5333, capital: 'Doha' },
+  { name: 'Republic of the Congo', tz: 'Africa/Brazzaville', lat: -4.2694, lon: 15.2714, capital: 'Brazzaville' },
+  { name: 'Romania', tz: 'Europe/Bucharest', lat: 44.4325, lon: 26.1039, capital: 'Bucharest' },
+  { name: 'Russia', tz: 'Europe/Moscow', lat: 55.7558, lon: 37.6178, capital: 'Moscow' },
+  { name: 'Rwanda', tz: 'Africa/Kigali', lat: -1.9536, lon: 30.0606, capital: 'Kigali' },
+  { name: 'Saint Kitts and Nevis', tz: 'America/St_Kitts', lat: 17.3, lon: -62.7333, capital: 'Basseterre' },
+  { name: 'Saint Lucia', tz: 'America/St_Vincent', lat: 14.0167, lon: -60.9833, capital: 'Castries' },
+  { name: 'Saint Vincent and the Grenadines', tz: 'America/St_Vincent', lat: 13.1578, lon: -61.225, capital: 'Kingstown' },
+  { name: 'Samoa', tz: 'Pacific/Apia', lat: -13.8333, lon: -171.75, capital: 'Apia' },
+  { name: 'San Marino', tz: 'Europe/San_Marino', lat: 43.9346, lon: 12.4473, capital: 'San Marino' },
+  { name: 'São Tomé and Príncipe', tz: 'Africa/Sao_Tome', lat: 0.3361, lon: 6.7306, capital: 'São Tomé' },
+  { name: 'Saudi Arabia', tz: 'Asia/Riyadh', lat: 24.6333, lon: 46.7167, capital: 'Riyadh' },
+  { name: 'Senegal', tz: 'Africa/Dakar', lat: 14.6928, lon: -17.4467, capital: 'Dakar' },
+  { name: 'Serbia', tz: 'Europe/Belgrade', lat: 44.82, lon: 20.46, capital: 'Belgrade' },
+  { name: 'Seychelles', tz: 'Indian/Mahe', lat: -4.6167, lon: 55.45, capital: 'Victoria' },
+  { name: 'Sierra Leone', tz: 'Africa/Freetown', lat: 8.4844, lon: -13.2344, capital: 'Freetown' },
+  { name: 'Singapore', tz: 'Asia/Singapore', lat: 1.3, lon: 103.8, capital: 'Singapore' },
+  { name: 'Slovakia', tz: 'Europe/Bratislava', lat: 48.1439, lon: 17.1097, capital: 'Bratislava' },
+  { name: 'Slovenia', tz: 'Europe/Ljubljana', lat: 46.0514, lon: 14.5061, capital: 'Ljubljana' },
+  { name: 'Solomon Islands', tz: 'Pacific/Guadalcanal', lat: -9.4319, lon: 159.9556, capital: 'Honiara' },
+  { name: 'Somalia', tz: 'Africa/Mogadishu', lat: 2.0392, lon: 45.3419, capital: 'Mogadishu' },
+  { name: 'South Africa', tz: 'Africa/Johannesburg', lat: -25.7461, lon: 28.1881, capital: 'Pretoria' },
+  { name: 'South Korea', tz: 'Asia/Seoul', lat: 37.56, lon: 126.99, capital: 'Seoul' },
+  { name: 'South Sudan', tz: 'Africa/Juba', lat: 4.85, lon: 31.6, capital: 'Juba' },
+  { name: 'Spain', tz: 'Europe/Madrid', lat: 40.4169, lon: -3.7033, capital: 'Madrid' },
+  { name: 'Sri Lanka', tz: 'Asia/Colombo', lat: 6.9344, lon: 79.8428, capital: 'Colombo' },
+  { name: 'Sudan', tz: 'Africa/Khartoum', lat: 15.5006, lon: 32.56, capital: 'Khartoum' },
+  { name: 'Suriname', tz: 'America/Paramaribo', lat: 5.8522, lon: -55.2039, capital: 'Paramaribo' },
+  { name: 'Sweden', tz: 'Europe/Stockholm', lat: 59.3294, lon: 18.0686, capital: 'Stockholm' },
+  { name: 'Switzerland', tz: 'Europe/Zurich', lat: 46.9481, lon: 7.4475, capital: 'Bern' },
+  { name: 'Syria', tz: 'Asia/Damascus', lat: 33.5131, lon: 36.2919, capital: 'Damascus' },
+  { name: 'Taiwan', tz: 'Asia/Taipei', lat: 25.0375, lon: 121.5625, capital: 'Taipei' },
+  { name: 'Tajikistan', tz: 'Asia/Dushanbe', lat: 38.5367, lon: 68.78, capital: 'Dushanbe' },
+  { name: 'Tanzania', tz: 'Africa/Dar_es_Salaam', lat: -6.8161, lon: 39.2803, capital: 'Dar es Salaam' },
+  { name: 'Thailand', tz: 'Asia/Bangkok', lat: 13.7525, lon: 100.4942, capital: 'Bangkok' },
+  { name: 'Timor-Leste', tz: 'Asia/Makassar', lat: -8.5536, lon: 125.5783, capital: 'Dili' },
+  { name: 'Togo', tz: 'Africa/Lome', lat: 6.1319, lon: 1.2228, capital: 'Lomé' },
+  { name: 'Tonga', tz: 'Pacific/Tongatapu', lat: -21.1333, lon: -175.2, capital: 'Nuku‘alofa' },
+  { name: 'Trinidad and Tobago', tz: 'America/Port_of_Spain', lat: 10.6667, lon: -61.5167, capital: 'Port of Spain' },
+  { name: 'Tunisia', tz: 'Africa/Tunis', lat: 36.8064, lon: 10.1817, capital: 'Tunis' },
+  { name: 'Türkiye', tz: 'Europe/Istanbul', lat: 39.93, lon: 32.85, capital: 'Ankara' },
+  { name: 'Turkmenistan', tz: 'Asia/Ashgabat', lat: 37.95, lon: 58.3833, capital: 'Ashgabat' },
+  { name: 'Tuvalu', tz: 'Pacific/Funafuti', lat: -8.5167, lon: 179.2, capital: 'Funafuti' },
+  { name: 'Uganda', tz: 'Africa/Kampala', lat: 0.3136, lon: 32.5811, capital: 'Kampala' },
+  { name: 'Ukraine', tz: 'Europe/Kiev', lat: 50.45, lon: 30.5233, capital: 'Kyiv' },
+  { name: 'United Arab Emirates', tz: 'Asia/Dubai', lat: 24.4667, lon: 54.3667, capital: 'Abu Dhabi' },
+  { name: 'United Kingdom', tz: 'Europe/London', lat: 51.5072, lon: -0.1275, capital: 'London' },
+  { name: 'United States', tz: 'America/New_York', lat: 38.9047, lon: -77.0163, capital: 'Washington' },
+  { name: 'Uruguay', tz: 'America/Montevideo', lat: -34.8836, lon: -56.1819, capital: 'Montevideo' },
+  { name: 'Uzbekistan', tz: 'Asia/Tashkent', lat: 41.3111, lon: 69.2797, capital: 'Tashkent' },
+  { name: 'Vanuatu', tz: 'Pacific/Efate', lat: -17.7333, lon: 168.3167, capital: 'Port-Vila' },
+  { name: 'Vatican City', tz: 'Europe/Rome', lat: 41.904, lon: 12.453, capital: 'Vatican City' },
+  { name: 'Venezuela', tz: 'America/Caracas', lat: 10.4806, lon: -66.9036, capital: 'Caracas' },
+  { name: 'Vietnam', tz: 'Asia/Bangkok', lat: 21.0283, lon: 105.8542, capital: 'Hanoi' },
+  { name: 'Yemen', tz: 'Asia/Aden', lat: 15.3483, lon: 44.2064, capital: 'Sanaa' },
+  { name: 'Zambia', tz: 'Africa/Lusaka', lat: -15.4167, lon: 28.2833, capital: 'Lusaka' },
+  { name: 'Zimbabwe', tz: 'Africa/Harare', lat: -17.8292, lon: 31.0522, capital: 'Harare' }
 ];
 function getSelectedCity() {
   const saved = localStorage.getItem('whub_city');
-  return WORLD_CITIES.find(c => c.name === saved) || WORLD_CITIES[0];
+  return WORLD_CITIES.find(c => c.name === saved) || WORLD_CITIES.find(c => c.name === 'Singapore') || WORLD_CITIES[0];
 }
 function populateCitySelect() {
   const sel = document.getElementById('clock-city-select');
@@ -2075,7 +2320,17 @@ async function voiceQuickAdd(resource, title) {
   closeModal('voice-modal');
 }
 
+function initThemeToggle() {
+  const toggle = document.getElementById('theme-toggle');
+  toggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('whub_theme', next);
+  });
+}
 async function init() {
+  initThemeToggle();
   MEMBERS = await api('/api/members');
   fillPersonSelects();
   renderMemberFilters();
