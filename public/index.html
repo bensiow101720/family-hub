@@ -232,8 +232,9 @@
   @media (max-width: 640px) { .mic-btn { bottom: 76px; } }
 
   /* ---------- Trips ---------- */
-  .trip-card { cursor: pointer; }
+  .trip-card { cursor: pointer; position: relative; }
   .trip-dates { color: var(--muted); font-weight: 700; font-size: 13px; }
+  .trip-medal { position: absolute; top: -10px; left: -10px; font-size: 26px; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.25)); line-height: 1; }
   .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 10px; margin: 12px 0; }
   .info-box { background: var(--beige); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
   .info-box .label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
@@ -254,6 +255,22 @@
   }
   .gallery-item.dragging { opacity: 0.55; transform: scale(1.04); box-shadow: 0 10px 24px var(--shadow); z-index: 5; cursor: grabbing; pointer-events: none; }
   .gallery-item.drop-target { outline: 3px dashed var(--turquoise); outline-offset: -3px; }
+
+  /* ---------- Cool Stuff ---------- */
+  .cool-photo-item { aspect-ratio: 1 / 1; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background: var(--card); position: relative; }
+  .cool-photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; }
+  .cool-photo-item .cool-delete-btn {
+    position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(15,30,27,0.72); color: #fff; border: none; font-size: 13px; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .cool-photo-item .cool-delete-btn:hover { background: #C0463C; }
+  .audio-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+  .audio-item .audio-meta { font-weight: 700; font-size: 13.5px; color: var(--ink); min-width: 110px; }
+  .audio-item .audio-sub { font-size: 11.5px; color: var(--muted); font-weight: 600; display: block; }
+  .audio-item audio { flex: 1; min-width: 220px; height: 36px; }
+  .audio-delete-btn { background: none; border: none; color: #C0463C; font-weight: 700; cursor: pointer; font-size: 13px; padding: 6px 10px; border-radius: 8px; flex-shrink: 0; }
+  .audio-delete-btn:hover { background: #fde4e1; }
 
   /* Long-press action menu (replaces the phone's native image menu) */
   .photo-menu {
@@ -354,6 +371,10 @@
     <button data-panel="budget">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="#2EC4B6" stroke="#1B3B36" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h4" stroke="#1B3B36"/><circle cx="17" cy="17" r="0.5" fill="#1B3B36"/></svg>
       <span class="tip">Budget</span>
+    </button>
+    <button data-panel="coolstuff">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="#FF9F4A" stroke="#1B3B36" stroke-width="1.6"><path d="M12 3l2.3 5.6L20 11l-5.7 2.4L12 19l-2.3-5.6L4 11l5.7-2.4z"/></svg>
+      <span class="tip">Cool Stuff</span>
     </button>
   </nav>
 
@@ -527,6 +548,38 @@
         </form>
       </div>
       <div id="budgets-container"></div>
+    </div>
+
+    <!-- COOL STUFF PANEL -->
+    <div class="panel" id="panel-coolstuff">
+      <div class="card">
+        <div class="section-title">✨ Add a photo</div>
+        <form class="add-form" id="coolphoto-form" style="align-items:flex-start;">
+          <input type="file" id="coolphoto-file" accept="image/*" required>
+          <input type="text" id="coolphoto-caption" placeholder="Caption (optional)">
+          <select id="coolphoto-person"></select>
+          <button class="btn" type="submit">Upload</button>
+        </form>
+        <div id="coolphoto-upload-status" style="font-size:13px; color:var(--muted);"></div>
+      </div>
+      <div class="card">
+        <div class="gallery-grid" id="coolphoto-grid"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">🎙️ Add a recording</div>
+        <p style="font-weight:600; color:var(--muted); margin-top:-6px;">Upload an mp3 (or other audio file) so everyone in the family can play it back.</p>
+        <form class="add-form" id="coolaudio-form" style="align-items:flex-start;">
+          <input type="file" id="coolaudio-file" accept="audio/*,.mp3" required>
+          <input type="text" id="coolaudio-title" placeholder="Title (optional)">
+          <select id="coolaudio-person"></select>
+          <button class="btn" type="submit">Upload</button>
+        </form>
+        <div id="coolaudio-upload-status" style="font-size:13px; color:var(--muted);"></div>
+      </div>
+      <div class="card">
+        <div id="coolaudio-list"></div>
+      </div>
     </div>
 
   </div>
@@ -704,7 +757,7 @@ function computeAutoWeather(citiesStr, startDate, endDate) {
 }
 
 function fillPersonSelects() {
-  ['event-person', 'chore-person', 'reminder-person', 'file-person', 'gallery-person'].forEach(sid => {
+  ['event-person', 'chore-person', 'reminder-person', 'file-person', 'gallery-person', 'coolphoto-person', 'coolaudio-person'].forEach(sid => {
     const el = document.getElementById(sid);
     el.innerHTML = MEMBERS.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
   });
@@ -1236,15 +1289,26 @@ function avgRating(ratings) {
 function fmtRating(n) {
   return Math.round(n * 1000) / 1000; // trims to <=3 decimals and drops trailing zeros (number, not string)
 }
+const TRIP_MEDALS = ['🥇', '🥈', '🥉'];
 async function loadTrips() {
   allTrips = await api('/api/trips');
   const el = document.getElementById('trips-container');
   if (!allTrips.length) { el.innerHTML = '<div class="card"><div class="empty-state">No trips yet — start planning one above! ✈️</div></div>'; return; }
-  el.innerHTML = allTrips.map(t => {
+  // Highest-rated first; unrated trips keep their original order at the bottom.
+  const ranked = [...allTrips].sort((a, b) => {
+    const avgA = avgRating(a.ratings), avgB = avgRating(b.ratings);
+    if (avgA == null && avgB == null) return 0;
+    if (avgA == null) return 1;
+    if (avgB == null) return -1;
+    return avgB - avgA;
+  });
+  el.innerHTML = ranked.map((t, i) => {
     const avg = avgRating(t.ratings);
     const n = ratingValues(t.ratings).length;
+    const medal = avg != null ? TRIP_MEDALS[i] : null;
     return `
     <div class="card trip-card" onclick="openTripModal('${t.id}')">
+      ${medal ? `<div class="trip-medal">${medal}</div>` : ''}
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
         <div class="section-title" style="margin-bottom:4px;">🌍 ${escapeHtml(t.name)}</div>
         ${avg != null ? `<div class="trip-rating-badge">${fmtRating(avg)}<span>/100${n > 1 ? ` · avg of ${n}` : ''}</span></div>` : ''}
@@ -1505,6 +1569,93 @@ async function deleteGalleryPhoto(id) {
   loadGallery();
 }
 
+// ---------- Cool Stuff (photos + audio recordings) ----------
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+document.getElementById('coolphoto-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const fileInput = document.getElementById('coolphoto-file');
+  const statusEl = document.getElementById('coolphoto-upload-status');
+  if (!fileInput.files.length) return;
+  statusEl.textContent = 'Uploading…';
+  try {
+    const imageData = await resizeImageFile(fileInput.files[0], 1600);
+    await api('/api/coolphotos', 'POST', {
+      caption: document.getElementById('coolphoto-caption').value,
+      person: document.getElementById('coolphoto-person').value,
+      imageData
+    });
+    e.target.reset();
+    statusEl.textContent = '';
+    loadCoolPhotos();
+  } catch (err) {
+    statusEl.textContent = 'Upload failed — try a different photo.';
+  }
+});
+let allCoolPhotos = [];
+async function loadCoolPhotos() {
+  allCoolPhotos = await api('/api/coolphotos');
+  const el = document.getElementById('coolphoto-grid');
+  if (!allCoolPhotos.length) { el.innerHTML = '<div class="empty-state">No photos yet — add something fun above! ✨</div>'; return; }
+  el.innerHTML = allCoolPhotos.map(p => `
+    <div class="cool-photo-item" data-id="${p.id}">
+      <img src="${p.url}" alt="${escapeHtml(p.caption)}" loading="lazy" onclick="openLightboxById('${p.id}', allCoolPhotos)">
+      <button class="cool-delete-btn" onclick="event.stopPropagation(); deleteCoolPhoto('${p.id}')" title="Delete">✕</button>
+    </div>
+  `).join('');
+}
+async function deleteCoolPhoto(id) {
+  if (!confirm('Delete this photo?')) return;
+  await api('/api/coolphotos/' + id, 'DELETE');
+  loadCoolPhotos();
+}
+
+document.getElementById('coolaudio-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const fileInput = document.getElementById('coolaudio-file');
+  const statusEl = document.getElementById('coolaudio-upload-status');
+  if (!fileInput.files.length) return;
+  statusEl.textContent = 'Uploading…';
+  try {
+    const audioData = await readFileAsDataURL(fileInput.files[0]);
+    if (!audioData.startsWith('data:audio/')) throw new Error('not audio');
+    await api('/api/coolaudio', 'POST', {
+      title: document.getElementById('coolaudio-title').value,
+      person: document.getElementById('coolaudio-person').value,
+      audioData
+    });
+    e.target.reset();
+    statusEl.textContent = '';
+    loadCoolAudio();
+  } catch (err) {
+    statusEl.textContent = 'Upload failed — try a different audio file.';
+  }
+});
+let allCoolAudio = [];
+async function loadCoolAudio() {
+  allCoolAudio = await api('/api/coolaudio');
+  const el = document.getElementById('coolaudio-list');
+  if (!allCoolAudio.length) { el.innerHTML = '<div class="empty-state">No recordings yet — upload one above! 🎙️</div>'; return; }
+  el.innerHTML = allCoolAudio.map(a => `
+    <div class="audio-item">
+      <div class="audio-meta">${escapeHtml(a.title)}<span class="audio-sub">${memberName(a.person)}</span></div>
+      <audio controls preload="none" src="${a.url}"></audio>
+      <button class="audio-delete-btn" onclick="deleteCoolAudio('${a.id}')">Delete</button>
+    </div>
+  `).join('');
+}
+async function deleteCoolAudio(id) {
+  if (!confirm('Delete this recording?')) return;
+  await api('/api/coolaudio/' + id, 'DELETE');
+  loadCoolAudio();
+}
+
 // ---------- Long-press action menu (Recenter / Delete) ----------
 // Replaces the phone's native "save/share image" long-press menu, which
 // otherwise hijacks the gesture and blocks the drag-reorder below.
@@ -1686,9 +1837,9 @@ document.getElementById('recenter-save').addEventListener('click', async () => {
 });
 
 // ---------- Photo lightbox (view full-size) ----------
-function openLightboxById(id) {
+function openLightboxById(id, source) {
   if (suppressNextGalleryClick) { suppressNextGalleryClick = false; return; }
-  const p = allGalleryPhotos.find(x => x.id === id);
+  const p = (source || allGalleryPhotos).find(x => x.id === id);
   if (!p) return;
   document.getElementById('lightbox-img').src = p.url;
   document.getElementById('lightbox-caption').textContent = [p.caption, memberName(p.person)].filter(Boolean).join(' · ');
@@ -1840,6 +1991,8 @@ async function init() {
   loadFiles();
   loadGallery();
   loadBudgets();
+  loadCoolPhotos();
+  loadCoolAudio();
 
   // Seed trip templates if they don't exist yet
   const existingNames = allTrips.map(t => t.name);

@@ -8,6 +8,10 @@ const DATA_FILE = path.join(__dirname, 'data', 'db.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const GALLERY_DIR = path.join(__dirname, 'data', 'gallery-photos');
 if (!fs.existsSync(GALLERY_DIR)) fs.mkdirSync(GALLERY_DIR, { recursive: true });
+const COOLSTUFF_PHOTOS_DIR = path.join(__dirname, 'data', 'coolstuff-photos');
+if (!fs.existsSync(COOLSTUFF_PHOTOS_DIR)) fs.mkdirSync(COOLSTUFF_PHOTOS_DIR, { recursive: true });
+const COOLSTUFF_AUDIO_DIR = path.join(__dirname, 'data', 'coolstuff-audio');
+if (!fs.existsSync(COOLSTUFF_AUDIO_DIR)) fs.mkdirSync(COOLSTUFF_AUDIO_DIR, { recursive: true });
 
 // Family members are fixed configuration (not user-editable data),
 // so palette/name tweaks here always take effect immediately.
@@ -32,6 +36,8 @@ function loadDB() {
       trips: [],
       budgets: [],
       gallery: [],
+      coolphotos: [],
+      coolaudio: [],
       googleAuth: {}
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(initial, null, 2));
@@ -40,7 +46,7 @@ function loadDB() {
   const db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
   delete db.members; // legacy field, no longer stored here
   // Ensure any newly-added collections exist even for older data files
-  ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery'].forEach(key => {
+  ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio'].forEach(key => {
     if (!Array.isArray(db[key])) db[key] = [];
   });
   if (typeof db.googleAuth !== 'object' || db.googleAuth === null || Array.isArray(db.googleAuth)) db.googleAuth = {};
@@ -81,7 +87,16 @@ const MIME = {
   '.js': 'application/javascript',
   '.json': 'application/json',
   '.svg': 'image/svg+xml',
-  '.png': 'image/png'
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.mp3': 'audio/mpeg',
+  '.m4a': 'audio/mp4',
+  '.wav': 'audio/wav',
+  '.ogg': 'audio/ogg',
+  '.weba': 'audio/webm'
 };
 
 function serveStatic(req, res, urlPath) {
@@ -107,6 +122,18 @@ function serveGalleryPhoto(req, res, urlPath) {
   const fileName = path.basename(urlPath); // strip any path traversal attempts
   const filePath = path.join(GALLERY_DIR, fileName);
   if (!filePath.startsWith(GALLERY_DIR)) { res.writeHead(403); return res.end('Forbidden'); }
+  fs.readFile(filePath, (err, content) => {
+    if (err) { res.writeHead(404); return res.end('Not found'); }
+    const ext = path.extname(filePath);
+    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
+    res.end(content);
+  });
+}
+
+function serveUploadedFile(req, res, dir, urlPath) {
+  const fileName = path.basename(urlPath); // strip any path traversal attempts
+  const filePath = path.join(dir, fileName);
+  if (!filePath.startsWith(dir)) { res.writeHead(403); return res.end('Forbidden'); }
   fs.readFile(filePath, (err, content) => {
     if (err) { res.writeHead(404); return res.end('Not found'); }
     const ext = path.extname(filePath);
@@ -239,7 +266,7 @@ async function handleAPI(req, res, urlPath) {
   const resource = parts[1]; // events, chores, lists, reminders, members, files
   const itemId = parts[2];
 
-  const collections = ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery'];
+  const collections = ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio'];
 
   if (resource === 'members' && req.method === 'GET') {
     return sendJSON(res, 200, MEMBERS);
@@ -286,6 +313,69 @@ async function handleAPI(req, res, urlPath) {
     db.gallery = reordered;
     saveDB(db);
     return sendJSON(res, 200, db.gallery);
+  }
+
+  // Cool Stuff photo upload: same pattern as gallery (decode base64, save, store metadata)
+  if (resource === 'coolphotos' && req.method === 'POST') {
+    const body = await readBody(req);
+    const { caption, person, imageData } = body;
+    if (!imageData || !imageData.startsWith('data:image/')) {
+      return sendJSON(res, 400, { error: 'imageData must be a base64 data URI (data:image/...)' });
+    }
+    const match = imageData.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (!match) return sendJSON(res, 400, { error: 'Could not parse image data' });
+    const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
+    const buffer = Buffer.from(match[2], 'base64');
+    const photoId = id();
+    const savedFileName = `${photoId}.${ext}`;
+    fs.writeFileSync(path.join(COOLSTUFF_PHOTOS_DIR, savedFileName), buffer);
+    const item = { id: photoId, caption: caption || '', person: person || 'family', url: `/coolstuff-photos/${savedFileName}`, createdAt: new Date().toISOString() };
+    db.coolphotos.unshift(item); // newest first
+    saveDB(db);
+    return sendJSON(res, 201, item);
+  }
+  if (resource === 'coolphotos' && itemId && req.method === 'DELETE') {
+    const idx = db.coolphotos.findIndex(x => x.id === itemId);
+    if (idx === -1) return sendJSON(res, 404, { error: 'Not found' });
+    const removed = db.coolphotos.splice(idx, 1)[0];
+    if (removed.url) {
+      const filePath = path.join(COOLSTUFF_PHOTOS_DIR, path.basename(removed.url));
+      fs.unlink(filePath, () => {}); // best-effort, ignore errors
+    }
+    saveDB(db);
+    return sendJSON(res, 200, removed);
+  }
+
+  // Cool Stuff audio upload: decode base64 audio, save to disk, store metadata
+  if (resource === 'coolaudio' && req.method === 'POST') {
+    const body = await readBody(req);
+    const { title, person, audioData } = body;
+    if (!audioData || !audioData.startsWith('data:audio/')) {
+      return sendJSON(res, 400, { error: 'audioData must be a base64 data URI (data:audio/...)' });
+    }
+    const match = audioData.match(/^data:audio\/([\w-]+);base64,(.+)$/);
+    if (!match) return sendJSON(res, 400, { error: 'Could not parse audio data' });
+    const extMap = { mpeg: 'mp3', mp3: 'mp3', wav: 'wav', 'x-wav': 'wav', mp4: 'm4a', 'x-m4a': 'm4a', ogg: 'ogg', webm: 'weba' };
+    const ext = extMap[match[1]] || 'mp3';
+    const buffer = Buffer.from(match[2], 'base64');
+    const audioId = id();
+    const savedFileName = `${audioId}.${ext}`;
+    fs.writeFileSync(path.join(COOLSTUFF_AUDIO_DIR, savedFileName), buffer);
+    const item = { id: audioId, title: title || 'Recording', person: person || 'family', url: `/coolstuff-audio/${savedFileName}`, createdAt: new Date().toISOString() };
+    db.coolaudio.unshift(item); // newest first
+    saveDB(db);
+    return sendJSON(res, 201, item);
+  }
+  if (resource === 'coolaudio' && itemId && req.method === 'DELETE') {
+    const idx = db.coolaudio.findIndex(x => x.id === itemId);
+    if (idx === -1) return sendJSON(res, 404, { error: 'Not found' });
+    const removed = db.coolaudio.splice(idx, 1)[0];
+    if (removed.url) {
+      const filePath = path.join(COOLSTUFF_AUDIO_DIR, path.basename(removed.url));
+      fs.unlink(filePath, () => {}); // best-effort, ignore errors
+    }
+    saveDB(db);
+    return sendJSON(res, 200, removed);
   }
 
   if (collections.includes(resource)) {
@@ -344,6 +434,10 @@ const server = http.createServer(async (req, res) => {
       handleGoogleStatus(req, res);
     } else if (urlPath.startsWith('/gallery-photos/')) {
       serveGalleryPhoto(req, res, urlPath);
+    } else if (urlPath.startsWith('/coolstuff-photos/')) {
+      serveUploadedFile(req, res, COOLSTUFF_PHOTOS_DIR, urlPath);
+    } else if (urlPath.startsWith('/coolstuff-audio/')) {
+      serveUploadedFile(req, res, COOLSTUFF_AUDIO_DIR, urlPath);
     } else if (urlPath.startsWith('/api/')) {
       await handleAPI(req, res, urlPath);
     } else {
