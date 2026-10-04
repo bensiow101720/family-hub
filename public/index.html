@@ -288,8 +288,11 @@
   .lightbox-close { position: absolute; top: 18px; right: 22px; background: rgba(255,255,255,0.18); border: none; color: #fff; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; }
 
   /* ---------- Trip rating ---------- */
-  .trip-rating-badge { background: var(--gold); color: var(--ink); font-family: 'Quicksand', sans-serif; font-weight: 800; font-size: 15px; padding: 4px 10px; border-radius: 12px; white-space: nowrap; flex-shrink: 0; }
-  .trip-rating-badge span { font-size: 10px; font-weight: 700; opacity: 0.7; }
+  .trip-rating-badge { background: var(--gold); color: var(--ink); font-family: 'Quicksand', sans-serif; font-weight: 800; font-size: 15px; padding: 4px 10px; border-radius: 12px; text-align: center; flex-shrink: 0; }
+  .trip-rating-badge span { display: block; font-size: 9.5px; font-weight: 700; opacity: 0.7; white-space: nowrap; }
+  .ratings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 4px; }
+  .rating-row { display: flex; flex-direction: column; gap: 3px; }
+  .rating-name { font-size: 12px; font-weight: 700; color: var(--ink); }
 
   /* ---------- Budget ---------- */
   .budget-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -1215,26 +1218,42 @@ document.getElementById('trip-form').addEventListener('submit', async e => {
     startDate: document.getElementById('trip-start').value,
     endDate: document.getElementById('trip-end').value,
     cities: '', weatherInfo: '', thingsToDo: '', flightEconomyPrice: '', flightBusinessPrice: '',
-    rating: null, pros: [], cons: []
+    ratings: {}, pros: [], cons: []
   });
   e.target.reset();
   await loadAllData();
   loadTrips();
 });
+// Ratings are per-person (everyone can rate a trip independently), out of
+// 100 but uncapped above it, with up to 3 decimal places.
+function ratingValues(ratings) {
+  return Object.values(ratings || {}).filter(v => typeof v === 'number' && !isNaN(v));
+}
+function avgRating(ratings) {
+  const vals = ratingValues(ratings);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+function fmtRating(n) {
+  return Math.round(n * 1000) / 1000; // trims to <=3 decimals and drops trailing zeros (number, not string)
+}
 async function loadTrips() {
   allTrips = await api('/api/trips');
   const el = document.getElementById('trips-container');
   if (!allTrips.length) { el.innerHTML = '<div class="card"><div class="empty-state">No trips yet — start planning one above! ✈️</div></div>'; return; }
-  el.innerHTML = allTrips.map(t => `
+  el.innerHTML = allTrips.map(t => {
+    const avg = avgRating(t.ratings);
+    const n = ratingValues(t.ratings).length;
+    return `
     <div class="card trip-card" onclick="openTripModal('${t.id}')">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
         <div class="section-title" style="margin-bottom:4px;">🌍 ${escapeHtml(t.name)}</div>
-        ${t.rating != null ? `<div class="trip-rating-badge">${t.rating}<span>/100</span></div>` : ''}
+        ${avg != null ? `<div class="trip-rating-badge">${fmtRating(avg)}<span>/100${n > 1 ? ` · avg of ${n}` : ''}</span></div>` : ''}
       </div>
       <div class="trip-dates">${t.startDate ? fmtDate(t.startDate) + ' – ' + fmtDate(t.endDate) : 'Dates not set yet'}</div>
       <div class="item-sub" style="margin-top:6px;">${(t.pros||[]).length} pros · ${(t.cons||[]).length} cons</div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 function siaLink() {
   return `https://www.singaporeair.com/en_SG/sg/home/`;
@@ -1258,9 +1277,17 @@ function openTripModal(id) {
     </div>
 
     <div class="info-grid">
-      <div class="info-box">
-        <div class="label">⭐ Rate this trip idea</div>
-        <input type="number" id="trip-rating-${id}" min="0" max="100" value="${t.rating != null ? t.rating : ''}" placeholder="0–100">
+      <div class="info-box" style="grid-column: 1 / -1;">
+        <div class="label">⭐ Rate this trip idea (out of 100 — everyone rates their own, up to 3 decimals, no upper limit)</div>
+        <div class="ratings-grid">
+          ${MEMBERS.filter(m => m.id !== 'family').map(m => `
+            <div class="rating-row">
+              <span class="rating-name">${escapeHtml(m.name)}</span>
+              <input type="number" step="0.001" min="0" id="trip-rating-${id}-${m.id}"
+                     value="${t.ratings && t.ratings[m.id] != null ? t.ratings[m.id] : ''}" placeholder="0–100+">
+            </div>
+          `).join('')}
+        </div>
       </div>
       <div class="info-box" style="grid-column: 1 / -1;">
         <div class="label">☀️ Typical weather (auto, based on cities & dates)</div>
@@ -1334,8 +1361,11 @@ function openTripModal(id) {
   });
 }
 async function saveTripInfo(id) {
-  const ratingRaw = document.getElementById(`trip-rating-${id}`).value;
-  const rating = ratingRaw === '' ? null : Math.max(0, Math.min(100, parseInt(ratingRaw, 10)));
+  const ratings = {};
+  MEMBERS.filter(m => m.id !== 'family').forEach(m => {
+    const raw = document.getElementById(`trip-rating-${id}-${m.id}`).value;
+    if (raw !== '') ratings[m.id] = Math.max(0, fmtRating(parseFloat(raw))); // no upper cap, 3 decimals, never negative
+  });
   await api('/api/trips/' + id, 'PUT', {
     name: document.getElementById(`trip-name-${id}`).value,
     startDate: document.getElementById(`trip-start-${id}`).value,
@@ -1345,7 +1375,7 @@ async function saveTripInfo(id) {
     thingsToDo: document.getElementById(`trip-todo-${id}`).value,
     flightEconomyPrice: document.getElementById(`trip-econ-${id}`).value,
     flightBusinessPrice: document.getElementById(`trip-biz-${id}`).value,
-    rating
+    ratings
   });
   await loadAllData();
   loadTrips();
