@@ -12,6 +12,13 @@ const COOLSTUFF_PHOTOS_DIR = path.join(__dirname, 'data', 'coolstuff-photos');
 if (!fs.existsSync(COOLSTUFF_PHOTOS_DIR)) fs.mkdirSync(COOLSTUFF_PHOTOS_DIR, { recursive: true });
 const COOLSTUFF_AUDIO_DIR = path.join(__dirname, 'data', 'coolstuff-audio');
 if (!fs.existsSync(COOLSTUFF_AUDIO_DIR)) fs.mkdirSync(COOLSTUFF_AUDIO_DIR, { recursive: true });
+const COOLSTUFF_VIDEOS_DIR = path.join(__dirname, 'data', 'coolstuff-videos');
+if (!fs.existsSync(COOLSTUFF_VIDEOS_DIR)) fs.mkdirSync(COOLSTUFF_VIDEOS_DIR, { recursive: true });
+
+// Bumped by hand whenever a notable batch of features ships; shown in the
+// Cool Stuff panel so the family can tell at a glance if they're on the
+// latest deploy.
+const APP_VERSION = '1.6.0';
 
 // Family members are fixed configuration (not user-editable data),
 // so palette/name tweaks here always take effect immediately.
@@ -38,6 +45,8 @@ function loadDB() {
       gallery: [],
       coolphotos: [],
       coolaudio: [],
+      coolvideos: [],
+      coolwishlist: [],
       googleAuth: {}
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(initial, null, 2));
@@ -46,7 +55,7 @@ function loadDB() {
   const db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
   delete db.members; // legacy field, no longer stored here
   // Ensure any newly-added collections exist even for older data files
-  ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio'].forEach(key => {
+  ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio', 'coolvideos', 'coolwishlist'].forEach(key => {
     if (!Array.isArray(db[key])) db[key] = [];
   });
   if (typeof db.googleAuth !== 'object' || db.googleAuth === null || Array.isArray(db.googleAuth)) db.googleAuth = {};
@@ -96,7 +105,10 @@ const MIME = {
   '.m4a': 'audio/mp4',
   '.wav': 'audio/wav',
   '.ogg': 'audio/ogg',
-  '.weba': 'audio/webm'
+  '.weba': 'audio/webm',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.mov': 'video/quicktime'
 };
 
 function serveStatic(req, res, urlPath) {
@@ -266,10 +278,14 @@ async function handleAPI(req, res, urlPath) {
   const resource = parts[1]; // events, chores, lists, reminders, members, files
   const itemId = parts[2];
 
-  const collections = ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio'];
+  const collections = ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio', 'coolvideos', 'coolwishlist'];
 
   if (resource === 'members' && req.method === 'GET') {
     return sendJSON(res, 200, MEMBERS);
+  }
+
+  if (resource === 'version' && req.method === 'GET') {
+    return sendJSON(res, 200, { version: APP_VERSION });
   }
 
   // Gallery photo upload: decode base64 image, save to disk, store metadata
@@ -378,6 +394,38 @@ async function handleAPI(req, res, urlPath) {
     return sendJSON(res, 200, removed);
   }
 
+  // Cool Stuff video upload: decode base64 video, save to disk, store metadata
+  if (resource === 'coolvideos' && req.method === 'POST') {
+    const body = await readBody(req);
+    const { caption, person, videoData } = body;
+    if (!videoData || !videoData.startsWith('data:video/')) {
+      return sendJSON(res, 400, { error: 'videoData must be a base64 data URI (data:video/...)' });
+    }
+    const match = videoData.match(/^data:video\/([\w-]+);base64,(.+)$/);
+    if (!match) return sendJSON(res, 400, { error: 'Could not parse video data' });
+    const extMap = { mp4: 'mp4', quicktime: 'mov', webm: 'webm', 'x-msvideo': 'avi' };
+    const ext = extMap[match[1]] || 'mp4';
+    const buffer = Buffer.from(match[2], 'base64');
+    const videoId = id();
+    const savedFileName = `${videoId}.${ext}`;
+    fs.writeFileSync(path.join(COOLSTUFF_VIDEOS_DIR, savedFileName), buffer);
+    const item = { id: videoId, caption: caption || '', person: person || 'family', url: `/coolstuff-videos/${savedFileName}`, createdAt: new Date().toISOString() };
+    db.coolvideos.unshift(item); // newest first
+    saveDB(db);
+    return sendJSON(res, 201, item);
+  }
+  if (resource === 'coolvideos' && itemId && req.method === 'DELETE') {
+    const idx = db.coolvideos.findIndex(x => x.id === itemId);
+    if (idx === -1) return sendJSON(res, 404, { error: 'Not found' });
+    const removed = db.coolvideos.splice(idx, 1)[0];
+    if (removed.url) {
+      const filePath = path.join(COOLSTUFF_VIDEOS_DIR, path.basename(removed.url));
+      fs.unlink(filePath, () => {}); // best-effort, ignore errors
+    }
+    saveDB(db);
+    return sendJSON(res, 200, removed);
+  }
+
   if (collections.includes(resource)) {
     if (req.method === 'GET') {
       return sendJSON(res, 200, db[resource]);
@@ -438,6 +486,8 @@ const server = http.createServer(async (req, res) => {
       serveUploadedFile(req, res, COOLSTUFF_PHOTOS_DIR, urlPath);
     } else if (urlPath.startsWith('/coolstuff-audio/')) {
       serveUploadedFile(req, res, COOLSTUFF_AUDIO_DIR, urlPath);
+    } else if (urlPath.startsWith('/coolstuff-videos/')) {
+      serveUploadedFile(req, res, COOLSTUFF_VIDEOS_DIR, urlPath);
     } else if (urlPath.startsWith('/api/')) {
       await handleAPI(req, res, urlPath);
     } else {

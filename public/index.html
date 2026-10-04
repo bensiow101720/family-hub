@@ -429,6 +429,13 @@
     cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s ease;
   }
   .cool-photo-item .cool-delete-btn:hover { background: #C0463C; }
+  .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .cool-video-item { border: 1px solid var(--glass-border); border-radius: var(--radius-md); overflow: hidden; background: var(--card-solid); box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+  .cool-video-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .cool-video-item video { width: 100%; aspect-ratio: 16 / 9; display: block; background: #000; }
+  .cool-video-item .cool-video-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; }
+  .cool-video-item .cool-video-caption { font-size: 12.5px; font-weight: 700; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cool-video-item .cool-video-sub { font-size: 11px; color: var(--muted); font-weight: 600; }
   .audio-item { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border: 1px solid var(--glass-border); border-radius: var(--radius-md); margin-bottom: 10px; flex-wrap: wrap; background: var(--surface-2); box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; }
   .audio-item:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
   .audio-item .audio-meta { font-weight: 700; font-size: 13.5px; color: var(--ink); min-width: 110px; }
@@ -496,9 +503,10 @@
 
   /* ---------- "Classic 1996" theme: marquee, hit counter, blink ---------- */
   @keyframes blink-fade { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
-  .blink { animation: blink-fade 1s steps(1) infinite; color: #FF0000; font-weight: bold; }
+  .blink { display: none; animation: blink-fade 1s steps(1) infinite; color: #FF0000; font-weight: bold; }
   .retro-marquee { display: none; }
   .retro-hitcounter { display: none; }
+  :root[data-theme="retro"] .blink { display: inline; }
   :root[data-theme="retro"] .retro-marquee {
     display: block; background: #000000; color: #00FF00; font-family: 'Comic Sans MS', 'Comic Sans', cursive;
     font-weight: bold; font-size: 16px; padding: 6px 0; border-bottom: 3px double #FFFF00;
@@ -846,6 +854,36 @@
       <div class="card">
         <div id="coolaudio-list"></div>
       </div>
+
+      <div class="card">
+        <div class="section-title">🎬 Add a video</div>
+        <p style="font-weight:600; color:var(--muted); margin-top:-6px;">Upload an mp4 (or other video file) — keep clips short, they're stored as-is with no compression.</p>
+        <form class="add-form" id="coolvideo-form" style="align-items:flex-start;">
+          <input type="file" id="coolvideo-file" accept="video/*,.mp4" required>
+          <input type="text" id="coolvideo-caption" placeholder="Caption (optional)">
+          <select id="coolvideo-person"></select>
+          <button class="btn" type="submit">Upload</button>
+        </form>
+        <div id="coolvideo-upload-status" style="font-size:13px; color:var(--muted);"></div>
+      </div>
+      <div class="card">
+        <div class="video-grid" id="coolvideo-grid"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">🛍️ What I wish to buy</div>
+        <p style="font-weight:600; color:var(--muted); margin-top:-6px;">A shared family wishlist — add anything you've got your eye on.</p>
+        <form class="add-form" id="wishlist-form">
+          <input type="text" id="wishlist-item" placeholder="Item (e.g. Nintendo Switch 2)" required>
+          <input type="text" id="wishlist-price" placeholder="Price (optional)" style="flex:0 1 120px; min-width:90px;">
+          <input type="text" id="wishlist-link" placeholder="Link (optional)" style="flex:1 1 180px;">
+          <select id="wishlist-person"></select>
+          <button class="btn" type="submit">Add</button>
+        </form>
+      </div>
+      <div class="card"><div id="wishlist-list"></div></div>
+
+      <div style="text-align:center; font-size:12px; color:var(--muted); font-weight:600; padding:4px 0 10px;" id="app-version"></div>
     </div>
 
   </div>
@@ -1029,7 +1067,7 @@ function computeAutoWeather(citiesStr, startDate, endDate) {
 }
 
 function fillPersonSelects() {
-  ['event-person', 'chore-person', 'reminder-person', 'file-person', 'gallery-person', 'coolphoto-person', 'coolaudio-person'].forEach(sid => {
+  ['event-person', 'chore-person', 'reminder-person', 'file-person', 'gallery-person', 'coolphoto-person', 'coolaudio-person', 'coolvideo-person', 'wishlist-person'].forEach(sid => {
     const el = document.getElementById(sid);
     el.innerHTML = MEMBERS.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
   });
@@ -2141,6 +2179,90 @@ async function deleteCoolAudio(id) {
   loadCoolAudio();
 }
 
+document.getElementById('coolvideo-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const fileInput = document.getElementById('coolvideo-file');
+  const statusEl = document.getElementById('coolvideo-upload-status');
+  if (!fileInput.files.length) return;
+  statusEl.textContent = 'Uploading…';
+  try {
+    const videoData = await readFileAsDataURL(fileInput.files[0]);
+    if (!videoData.startsWith('data:video/')) throw new Error('not video');
+    await api('/api/coolvideos', 'POST', {
+      caption: document.getElementById('coolvideo-caption').value,
+      person: document.getElementById('coolvideo-person').value,
+      videoData
+    });
+    e.target.reset();
+    statusEl.textContent = '';
+    loadCoolVideos();
+  } catch (err) {
+    statusEl.textContent = 'Upload failed — try a different video file.';
+  }
+});
+let allCoolVideos = [];
+async function loadCoolVideos() {
+  allCoolVideos = await api('/api/coolvideos');
+  const el = document.getElementById('coolvideo-grid');
+  if (!allCoolVideos.length) { el.innerHTML = '<div class="empty-state">No videos yet — upload one above! 🎬</div>'; return; }
+  el.innerHTML = allCoolVideos.map(v => `
+    <div class="cool-video-item">
+      <video controls preload="metadata" src="${v.url}"></video>
+      <div class="cool-video-footer">
+        <div class="cool-video-caption" title="${escapeHtml(v.caption)}">${v.caption ? escapeHtml(v.caption) : '<span class=\"cool-video-sub\">Untitled</span>'}<span class="cool-video-sub"> · ${memberName(v.person)}</span></div>
+        <button class="icon-btn" onclick="deleteCoolVideo('${v.id}')" title="Delete">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+async function deleteCoolVideo(id) {
+  if (!confirm('Delete this video?')) return;
+  await api('/api/coolvideos/' + id, 'DELETE');
+  loadCoolVideos();
+}
+
+document.getElementById('wishlist-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  await api('/api/coolwishlist', 'POST', {
+    item: document.getElementById('wishlist-item').value,
+    price: document.getElementById('wishlist-price').value,
+    link: document.getElementById('wishlist-link').value,
+    person: document.getElementById('wishlist-person').value
+  });
+  e.target.reset();
+  loadWishlist();
+});
+async function loadWishlist() {
+  const items = await api('/api/coolwishlist');
+  const el = document.getElementById('wishlist-list');
+  if (!items.length) { el.innerHTML = '<div class="empty-state">No wishlist items yet — add something you\'re eyeing above! 🛍️</div>'; return; }
+  el.innerHTML = items.map(w => `
+    <div class="item-row">
+      <div class="item-left">
+        <span class="dot" style="background:${memberColor(w.person)}"></span>
+        <div style="min-width:0;">
+          <div class="item-title">${w.link ? `<a href="${escapeHtml(w.link)}" target="_blank">${escapeHtml(w.item)}</a>` : escapeHtml(w.item)}</div>
+          <div class="item-sub">${w.price ? escapeHtml(w.price) + ' · ' : ''}Wanted by ${memberName(w.person)}</div>
+        </div>
+      </div>
+      <button class="icon-btn" onclick="deleteWishlistItem('${w.id}')" title="Delete">🗑️</button>
+    </div>
+  `).join('');
+}
+async function deleteWishlistItem(id) {
+  if (!confirm('Remove this from the wishlist?')) return;
+  await api('/api/coolwishlist/' + id, 'DELETE');
+  loadWishlist();
+}
+async function loadAppVersion() {
+  try {
+    const { version } = await api('/api/version');
+    document.getElementById('app-version').textContent = `Siow Hub · v${version}`;
+  } catch (err) {
+    document.getElementById('app-version').textContent = '';
+  }
+}
+
 // ---------- Long-press action menu (Recenter / Delete) ----------
 // Replaces the phone's native "save/share image" long-press menu, which
 // otherwise hijacks the gesture and blocks the drag-reorder below.
@@ -2495,6 +2617,9 @@ async function init() {
   loadBudgets();
   loadCoolPhotos();
   loadCoolAudio();
+  loadCoolVideos();
+  loadWishlist();
+  loadAppVersion();
 
   // Seed trip templates if they don't exist yet
   const existingNames = allTrips.map(t => t.name);
