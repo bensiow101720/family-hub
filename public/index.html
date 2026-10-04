@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Siow Hub</title>
-<script>(function(){try{var t=localStorage.getItem('whub_theme');document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'light');}catch(e){}})();</script>
+<script>(function(){try{var t=localStorage.getItem('whub_theme');document.documentElement.setAttribute('data-theme', (t==='dark'||t==='retro')?t:'light');}catch(e){}})();</script>
 <style>
   :root {
     --beige: #EFF9F6;
@@ -75,6 +75,46 @@
     --bg-glow-2: rgba(166,107,255,0.22);
     --bg-glow-3: rgba(46,196,182,0.2);
   }
+  /* ---------- "Classic 1996" theme: flat colors, hard edges, no blur/gradients ---------- */
+  :root[data-theme="retro"] {
+    --beige: #008080;
+    --card: #C0C0C0;
+    --card-solid: #FFFFFF;
+    --ink: #000000;
+    --muted: #333333;
+    --border: #000000;
+    --glass-border: #000000;
+    --gold: #FFFF00;
+    --gold-deep: #FFCC00;
+    --gold-grad: #C0C0C0;
+    --sage: #00FF00;
+    --blue: #0000EE;
+    --lavender: #9900CC;
+    --blush: #FF0000;
+    --blush-grad: #C0C0C0;
+    --shadow: rgba(0,0,0,0.6);
+    --shadow-sm: 2px 2px 0 #000;
+    --shadow-md: 3px 3px 0 #000;
+    --shadow-lg: 4px 4px 0 #000;
+    --turquoise: #008080;
+    --turquoise-grad: #C0C0C0;
+    --radius-lg: 0px;
+    --radius-md: 0px;
+    --radius-sm: 0px;
+    --surface-1: #C0C0C0;
+    --surface-2: #FFFFFF;
+    --surface-hover: #FFFFCC;
+    --surface-3: #FFFFFF;
+    --surface-strong: #C0C0C0;
+    --surface-ghost: #C0C0C0;
+    --today-mask: #FFFF99;
+    --input-solid-focus: #FFFFCC;
+    --dot-ring: #000000;
+    --danger-tint: #FFCCCC;
+    --bg-glow-1: transparent;
+    --bg-glow-2: transparent;
+    --bg-glow-3: transparent;
+  }
   * { box-sizing: border-box; }
   ::-webkit-scrollbar { width: 11px; height: 11px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -144,10 +184,13 @@
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
   .theme-toggle:hover { transform: translateY(-1px) rotate(12deg); box-shadow: var(--shadow-md); }
-  .theme-toggle .icon-sun { display: none; }
+  /* Cycle light -> dark -> retro -> light; the icon shown is always the mode a click lands on next. */
+  .theme-toggle .icon-sun, .theme-toggle .icon-moon, .theme-toggle .icon-retro { display: none; }
   .theme-toggle .icon-moon { display: block; }
-  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
   :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-retro { display: block; }
+  :root[data-theme="retro"] .theme-toggle .icon-retro { display: none; }
+  :root[data-theme="retro"] .theme-toggle .icon-sun { display: block; }
 
   /* ---------- Layout: sidebar + content ---------- */
   .layout { display: flex; align-items: flex-start; }
@@ -347,6 +390,7 @@
   .mic-btn.listening { background: var(--blush-grad); animation: pulse 1s infinite; }
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
   @media (max-width: 640px) { .mic-btn { bottom: 76px; } }
+  @media (max-width: 640px) { .retro-hitcounter { bottom: 76px !important; left: 8px !important; font-size: 9px !important; } }
 
   /* ---------- Trips ---------- */
   .trip-card { cursor: pointer; position: relative; transition: transform 0.18s ease, box-shadow 0.18s ease; }
@@ -449,12 +493,97 @@
   .budget-table td input:focus { background: var(--surface-3); border-radius: 6px; }
   .budget-table tfoot td { font-weight: 700; font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; border-top: 2px solid var(--border); }
   .budget-price { text-align: right; }
+
+  /* ---------- "Classic 1996" theme: marquee, hit counter, blink ---------- */
+  @keyframes blink-fade { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  .blink { animation: blink-fade 1s steps(1) infinite; color: #FF0000; font-weight: bold; }
+  .retro-marquee { display: none; }
+  .retro-hitcounter { display: none; }
+  :root[data-theme="retro"] .retro-marquee {
+    display: block; background: #000000; color: #00FF00; font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+    font-weight: bold; font-size: 16px; padding: 6px 0; border-bottom: 3px double #FFFF00;
+  }
+  :root[data-theme="retro"] .retro-hitcounter {
+    display: block; position: fixed; left: 16px; bottom: 16px; z-index: 40;
+    background: #000000; color: #00FF00; border: 2px outset #999; padding: 8px 12px;
+    font-family: 'Courier New', monospace; font-size: 10px; text-align: center; font-weight: bold;
+  }
+  .hitcounter-digits { font-size: 20px; letter-spacing: 2px; color: #00FF00; background: #001a00; padding: 2px 4px; margin: 3px 0; }
+
+  /* ---------- "Classic 1996" theme: everything else ---------- */
+  :root[data-theme="retro"] body {
+    background-color: #008080;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Crect width='40' height='40' fill='%23008080'/%3E%3Ccircle cx='8' cy='8' r='1.5' fill='%23FFFF00'/%3E%3Ccircle cx='28' cy='20' r='1.5' fill='%23FFFFFF'/%3E%3Ccircle cx='15' cy='32' r='1.5' fill='%23FF00FF'/%3E%3C/svg%3E");
+    background-repeat: repeat; background-attachment: fixed;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+  :root[data-theme="retro"] * { transition: none !important; animation: none !important; }
+  :root[data-theme="retro"] .blink { animation: blink-fade 1s steps(1) infinite !important; }
+  :root[data-theme="retro"] h1, :root[data-theme="retro"] h2, :root[data-theme="retro"] h3,
+  :root[data-theme="retro"] h4, :root[data-theme="retro"] .heading, :root[data-theme="retro"] .brand,
+  :root[data-theme="retro"] .section-title, :root[data-theme="retro"] .btn,
+  :root[data-theme="retro"] .cal-title, :root[data-theme="retro"] .day-num {
+    font-family: 'Comic Sans MS', 'Comic Sans', cursive !important;
+  }
+  :root[data-theme="retro"] .brand-text { background: none !important; -webkit-text-fill-color: unset !important; color: #FF00FF !important; }
+  :root[data-theme="retro"] .card, :root[data-theme="retro"] .sidebar, :root[data-theme="retro"] .weather-clock,
+  :root[data-theme="retro"] .modal, :root[data-theme="retro"] .chip, :root[data-theme="retro"] .info-box,
+  :root[data-theme="retro"] .day-cell, :root[data-theme="retro"] .mini-month, :root[data-theme="retro"] .gallery-item,
+  :root[data-theme="retro"] .cool-photo-item, :root[data-theme="retro"] .audio-item, :root[data-theme="retro"] .item-row,
+  :root[data-theme="retro"] .photo-menu, :root[data-theme="retro"] .trip-card {
+    border: 2px solid #000000 !important; border-radius: 0 !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+  }
+  :root[data-theme="retro"] .btn, :root[data-theme="retro"] .sidebar button, :root[data-theme="retro"] .cal-nav button,
+  :root[data-theme="retro"] .view-toggle button, :root[data-theme="retro"] .theme-toggle,
+  :root[data-theme="retro"] .mic-btn, :root[data-theme="retro"] input, :root[data-theme="retro"] select,
+  :root[data-theme="retro"] textarea {
+    border-radius: 0 !important; background: #C0C0C0 !important; color: #000000 !important;
+    border: 2px outset #ffffff !important; backdrop-filter: none !important;
+  }
+  :root[data-theme="retro"] .btn:active, :root[data-theme="retro"] .sidebar button:active,
+  :root[data-theme="retro"] .cal-nav button:active, :root[data-theme="retro"] .theme-toggle:active {
+    border-style: inset !important;
+  }
+  :root[data-theme="retro"] .sidebar button.active, :root[data-theme="retro"] .view-toggle button.active {
+    background: #000080 !important; color: #FFFFFF !important;
+  }
+  :root[data-theme="retro"] input, :root[data-theme="retro"] select, :root[data-theme="retro"] textarea { border: 2px inset #999 !important; }
+  /* Sidebar becomes a classic underlined text-link list instead of icon buttons */
+  :root[data-theme="retro"] .sidebar { background: #C0C0C0 !important; }
+  :root[data-theme="retro"] .sidebar button svg { display: none !important; }
+  :root[data-theme="retro"] .sidebar button { height: auto !important; aspect-ratio: auto !important; padding: 6px 4px !important; }
+  :root[data-theme="retro"] .sidebar button .tip {
+    display: inline !important; position: static !important; opacity: 1 !important; transform: none !important; pointer-events: auto !important;
+    background: none !important; color: #0000EE !important; text-decoration: underline !important;
+    font-family: 'Times New Roman', Times, serif !important; font-size: 11px !important; font-weight: normal !important;
+    white-space: normal !important; padding: 0 !important; box-shadow: none !important;
+  }
+  :root[data-theme="retro"] .sidebar button.active .tip { color: #FFFFFF !important; }
+  @media (max-width: 640px) {
+    :root[data-theme="retro"] .sidebar { flex-wrap: wrap !important; height: auto !important; }
+    :root[data-theme="retro"] .sidebar button { flex: 1 1 auto !important; min-width: 60px !important; }
+    :root[data-theme="retro"] .sidebar button .tip { display: inline !important; font-size: 9px !important; }
+  }
+  :root[data-theme="retro"] a { color: #0000EE !important; text-decoration: underline !important; }
+  :root[data-theme="retro"] a:visited { color: #551A8B !important; }
+  :root[data-theme="retro"] .topbar {
+    border-bottom: 6px solid; border-image: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet) 1;
+  }
+  :root[data-theme="retro"] ::-webkit-scrollbar { width: 18px; height: 18px; }
+  :root[data-theme="retro"] ::-webkit-scrollbar-track { background: #C0C0C0; }
+  :root[data-theme="retro"] ::-webkit-scrollbar-thumb { background: #C0C0C0; border: 2px outset #fff; border-radius: 0; }
+  :root[data-theme="retro"] .trip-rating-badge, :root[data-theme="retro"] .checkbox.done {
+    background: #FFFF00 !important; color: #000 !important; border: 2px outset #fff !important; border-radius: 0 !important;
+  }
 </style>
 </head>
 <body>
 
+<marquee id="retro-marquee" class="retro-marquee" behavior="scroll" direction="left" scrollamount="4">🚧 WELCOME TO SIOW HUB !!! 🚧 &nbsp; ✨ BEST VIEWED IN NETSCAPE NAVIGATOR AT 800x600 ✨ &nbsp; 🚧 THIS SITE IS ALWAYS UNDER CONSTRUCTION 🚧 &nbsp; 👾 THANKS FOR VISITING, SIGN THE GUESTBOOK 👾 &nbsp;</marquee>
+
 <div class="topbar">
-  <div class="brand"><span>🏡</span> <span class="brand-text">Siow Hub</span></div>
+  <div class="brand"><span>🏡</span> <span class="brand-text">Siow Hub</span> <span id="retro-blink" class="blink">★ NEW! ★</span></div>
   <div style="display:flex; align-items:center; gap:12px;">
     <div class="weather-clock">
       <span class="icon" id="weather-icon">🌤️</span>
@@ -467,9 +596,10 @@
         <div class="value" id="clock-time">--:--</div>
       </div>
     </div>
-    <button id="theme-toggle" class="theme-toggle" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">
+    <button id="theme-toggle" class="theme-toggle" type="button" title="Cycle theme (light / dark / 1996)" aria-label="Cycle theme">
       <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
       <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      <svg class="icon-retro" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg>
     </button>
   </div>
 </div>
@@ -786,6 +916,12 @@
 </div>
 
 <button class="mic-btn" id="mic-btn" title="Add by voice">🎤</button>
+
+<div id="retro-hitcounter" class="retro-hitcounter">
+  <div>YOU ARE VISITOR NUMBER</div>
+  <div id="hitcounter-value" class="hitcounter-digits">000000</div>
+  <div>SIGN THE GUESTBOOK · EMAIL WEBMASTER</div>
+</div>
 
 <script>
 let MEMBERS = [];
@@ -2320,17 +2456,24 @@ async function voiceQuickAdd(resource, title) {
   closeModal('voice-modal');
 }
 
+function initRetroHitCounter() {
+  const count = (parseInt(localStorage.getItem('whub_hits') || '0', 10) || 0) + 1;
+  localStorage.setItem('whub_hits', String(count));
+  document.getElementById('hitcounter-value').textContent = String(count).padStart(6, '0');
+}
 function initThemeToggle() {
   const toggle = document.getElementById('theme-toggle');
+  const THEME_ORDER = ['light', 'dark', 'retro'];
   toggle.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-    const next = current === 'dark' ? 'light' : 'dark';
+    const current = THEME_ORDER.includes(document.documentElement.getAttribute('data-theme')) ? document.documentElement.getAttribute('data-theme') : 'light';
+    const next = THEME_ORDER[(THEME_ORDER.indexOf(current) + 1) % THEME_ORDER.length];
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('whub_theme', next);
   });
 }
 async function init() {
   initThemeToggle();
+  initRetroHitCounter();
   MEMBERS = await api('/api/members');
   fillPersonSelects();
   renderMemberFilters();
