@@ -310,6 +310,8 @@
   .ratings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 4px; }
   .rating-row { display: flex; flex-direction: column; gap: 3px; }
   .rating-name { font-size: 12px; font-weight: 700; color: var(--ink); }
+  .rating-result { margin-top: 12px; font-size: 13.5px; font-weight: 700; color: var(--ink); }
+  .rating-result span { font-weight: 600; color: var(--muted); font-size: 12px; }
 
   /* ---------- Budget ---------- */
   .budget-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -1289,32 +1291,48 @@ function avgRating(ratings) {
 function fmtRating(n) {
   return Math.round(n * 1000) / 1000; // trims to <=3 decimals and drops trailing zeros (number, not string)
 }
+// Each con knocks 5% off the average rating (cumulative), floored at 0 — a
+// trip can look great on paper but score lower once its downsides are weighed in.
+const CON_PENALTY_PERCENT = 5;
+function consPenaltyFactor(consCount) {
+  return Math.max(0, 1 - (CON_PENALTY_PERCENT * consCount) / 100);
+}
+function adjustedRating(avg, consCount) {
+  return avg == null ? null : avg * consPenaltyFactor(consCount);
+}
 const TRIP_MEDALS = ['🥇', '🥈', '🥉'];
 async function loadTrips() {
   allTrips = await api('/api/trips');
   const el = document.getElementById('trips-container');
   if (!allTrips.length) { el.innerHTML = '<div class="card"><div class="empty-state">No trips yet — start planning one above! ✈️</div></div>'; return; }
-  // Highest-rated first; unrated trips keep their original order at the bottom.
+  // Highest-scoring first (score = average rating minus the cons penalty);
+  // unrated trips keep their original order at the bottom.
   const ranked = [...allTrips].sort((a, b) => {
-    const avgA = avgRating(a.ratings), avgB = avgRating(b.ratings);
-    if (avgA == null && avgB == null) return 0;
-    if (avgA == null) return 1;
-    if (avgB == null) return -1;
-    return avgB - avgA;
+    const adjA = adjustedRating(avgRating(a.ratings), (a.cons || []).length);
+    const adjB = adjustedRating(avgRating(b.ratings), (b.cons || []).length);
+    if (adjA == null && adjB == null) return 0;
+    if (adjA == null) return 1;
+    if (adjB == null) return -1;
+    return adjB - adjA;
   });
   el.innerHTML = ranked.map((t, i) => {
     const avg = avgRating(t.ratings);
     const n = ratingValues(t.ratings).length;
-    const medal = avg != null ? TRIP_MEDALS[i] : null;
+    const consCount = (t.cons || []).length;
+    const adjusted = adjustedRating(avg, consCount);
+    const medal = adjusted != null ? TRIP_MEDALS[i] : null;
+    const details = [];
+    if (n > 1) details.push(`avg of ${n}`);
+    if (consCount > 0) details.push(`-${consCount * CON_PENALTY_PERCENT}% for ${consCount} con${consCount > 1 ? 's' : ''}`);
     return `
     <div class="card trip-card" onclick="openTripModal('${t.id}')">
       ${medal ? `<div class="trip-medal">${medal}</div>` : ''}
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
         <div class="section-title" style="margin-bottom:4px;">🌍 ${escapeHtml(t.name)}</div>
-        ${avg != null ? `<div class="trip-rating-badge">${fmtRating(avg)}<span>/100${n > 1 ? ` · avg of ${n}` : ''}</span></div>` : ''}
+        ${adjusted != null ? `<div class="trip-rating-badge">${fmtRating(adjusted)}<span>/100${details.length ? ` · ${details.join(' · ')}` : ''}</span></div>` : ''}
       </div>
       <div class="trip-dates">${t.startDate ? fmtDate(t.startDate) + ' – ' + fmtDate(t.endDate) : 'Dates not set yet'}</div>
-      <div class="item-sub" style="margin-top:6px;">${(t.pros||[]).length} pros · ${(t.cons||[]).length} cons</div>
+      <div class="item-sub" style="margin-top:6px;">${(t.pros||[]).length} pros · ${consCount} cons</div>
     </div>
   `;
   }).join('');
@@ -1330,6 +1348,9 @@ function openTripModal(id) {
   const t = allTrips.find(x => x.id === id);
   document.getElementById('trip-modal-title').textContent = '🌍 Trip details';
   const cities = (t.cities || '').split(',').map(c => c.trim()).filter(Boolean);
+  const modalAvg = avgRating(t.ratings);
+  const modalConsCount = (t.cons || []).length;
+  const modalAdjusted = adjustedRating(modalAvg, modalConsCount);
   document.getElementById('trip-modal-body').innerHTML = `
     <div class="edit-form" style="margin-bottom:14px;">
       <input type="text" id="trip-name-${id}" value="${escapeHtml(t.name)}" style="font-family:'Quicksand',sans-serif; font-weight:700; font-size:17px;">
@@ -1351,6 +1372,11 @@ function openTripModal(id) {
                      value="${t.ratings && t.ratings[m.id] != null ? t.ratings[m.id] : ''}" placeholder="0–100+">
             </div>
           `).join('')}
+        </div>
+        <div class="rating-result">
+          ${modalAvg != null
+            ? `Overall score: <strong>${fmtRating(modalAdjusted)}</strong>/100 <span>(raw avg ${fmtRating(modalAvg)}${modalConsCount > 0 ? ` · -${modalConsCount * CON_PENALTY_PERCENT}% for ${modalConsCount} con${modalConsCount > 1 ? 's' : ''}` : ''})</span>`
+            : `<span>No ratings yet</span>`}
         </div>
       </div>
       <div class="info-box" style="grid-column: 1 / -1;">
