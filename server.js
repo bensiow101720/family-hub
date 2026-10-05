@@ -150,15 +150,39 @@ function serveGalleryPhoto(req, res, urlPath) {
   });
 }
 
+// Serves with HTTP Range support (206 partial content) so <audio>/<video>
+// can seek without downloading the whole file first — without this, a
+// browser can show duration/controls but can't actually skip around.
 function serveUploadedFile(req, res, dir, urlPath) {
   const fileName = path.basename(urlPath); // strip any path traversal attempts
   const filePath = path.join(dir, fileName);
   if (!filePath.startsWith(dir)) { res.writeHead(403); return res.end('Forbidden'); }
-  fs.readFile(filePath, (err, content) => {
+  fs.stat(filePath, (err, stat) => {
     if (err) { res.writeHead(404); return res.end('Not found'); }
     const ext = path.extname(filePath);
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
-    res.end(content);
+    const contentType = MIME[ext] || 'application/octet-stream';
+    const range = req.headers.range;
+    if (range) {
+      const match = /bytes=(\d*)-(\d*)/.exec(range);
+      let start = match && match[1] ? parseInt(match[1], 10) : 0;
+      let end = match && match[2] ? parseInt(match[2], 10) : stat.size - 1;
+      if (isNaN(start)) start = 0;
+      if (isNaN(end) || end >= stat.size) end = stat.size - 1;
+      if (start > end || start < 0) {
+        res.writeHead(416, { 'Content-Range': `bytes */${stat.size}` });
+        return res.end();
+      }
+      res.writeHead(206, {
+        'Content-Type': contentType,
+        'Content-Length': end - start + 1,
+        'Content-Range': `bytes ${start}-${end}/${stat.size}`,
+        'Accept-Ranges': 'bytes'
+      });
+      fs.createReadStream(filePath, { start, end }).pipe(res);
+    } else {
+      res.writeHead(200, { 'Content-Type': contentType, 'Content-Length': stat.size, 'Accept-Ranges': 'bytes' });
+      fs.createReadStream(filePath).pipe(res);
+    }
   });
 }
 

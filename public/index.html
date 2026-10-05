@@ -443,7 +443,17 @@
   .audio-item:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
   .audio-item .audio-meta { font-weight: 700; font-size: 13.5px; color: var(--ink); min-width: 110px; }
   .audio-item .audio-sub { font-size: 11.5px; color: var(--muted); font-weight: 600; display: block; }
-  .audio-item audio { flex: 1; min-width: 220px; height: 36px; }
+  .audio-player { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 220px; }
+  .audio-player audio { display: none; }
+  .audio-play-btn {
+    width: 34px; height: 34px; border-radius: 50%; border: none; flex-shrink: 0;
+    background: var(--gold-grad); color: var(--ink); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: var(--shadow-sm); transition: transform 0.15s ease;
+  }
+  .audio-play-btn:hover { transform: scale(1.06); }
+  .audio-play-btn svg { margin-left: 1px; }
+  .audio-seek { flex: 1; min-width: 90px; height: 6px; accent-color: var(--turquoise); cursor: pointer; }
+  .audio-time { font-size: 11.5px; font-weight: 700; color: var(--muted); white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
   .audio-delete-btn { background: none; border: none; color: #C0463C; font-weight: 700; cursor: pointer; font-size: 13px; padding: 6px 10px; border-radius: 8px; flex-shrink: 0; transition: background 0.15s ease; }
   .audio-delete-btn:hover { background: var(--danger-tint); }
 
@@ -2252,10 +2262,58 @@ async function loadCoolAudio() {
   el.innerHTML = allCoolAudio.map(a => `
     <div class="audio-item">
       <div class="audio-meta">${escapeHtml(a.title)}<span class="audio-sub">${memberName(a.person)}</span></div>
-      <audio controls preload="none" src="${a.url}"></audio>
+      <div class="audio-player">
+        <button class="audio-play-btn" type="button" aria-label="Play">
+          <svg class="icon-play" viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" width="15" height="15" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        </button>
+        <input type="range" class="audio-seek" min="0" max="0" value="0" step="0.01">
+        <span class="audio-time"><span class="audio-cur">0:00</span> / <span class="audio-dur">0:00</span></span>
+        <audio preload="metadata" src="${a.url}"></audio>
+      </div>
       <button class="audio-delete-btn" onclick="deleteCoolAudio('${a.id}')">Delete</button>
     </div>
   `).join('');
+  initAudioPlayers();
+}
+function fmtAudioTime(sec) {
+  if (!isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+function initAudioPlayers() {
+  document.querySelectorAll('.audio-player').forEach(wrap => {
+    const audio = wrap.querySelector('audio');
+    const playBtn = wrap.querySelector('.audio-play-btn');
+    const iconPlay = wrap.querySelector('.icon-play');
+    const iconPause = wrap.querySelector('.icon-pause');
+    const seek = wrap.querySelector('.audio-seek');
+    const curEl = wrap.querySelector('.audio-cur');
+    const durEl = wrap.querySelector('.audio-dur');
+    let seeking = false;
+    audio.addEventListener('loadedmetadata', () => {
+      seek.max = audio.duration || 0;
+      durEl.textContent = fmtAudioTime(audio.duration);
+    });
+    audio.addEventListener('timeupdate', () => {
+      if (!seeking) seek.value = audio.currentTime;
+      curEl.textContent = fmtAudioTime(audio.currentTime);
+    });
+    audio.addEventListener('play', () => { iconPlay.style.display = 'none'; iconPause.style.display = 'block'; });
+    audio.addEventListener('pause', () => { iconPlay.style.display = 'block'; iconPause.style.display = 'none'; });
+    audio.addEventListener('ended', () => { iconPlay.style.display = 'block'; iconPause.style.display = 'none'; seek.value = 0; });
+    playBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        document.querySelectorAll('.audio-player audio').forEach(a => { if (a !== audio) a.pause(); });
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+    seek.addEventListener('input', () => { seeking = true; curEl.textContent = fmtAudioTime(seek.value); });
+    seek.addEventListener('change', () => { audio.currentTime = seek.value; seeking = false; });
+  });
 }
 async function deleteCoolAudio(id) {
   if (!confirm('Delete this recording?')) return;
