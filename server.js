@@ -20,15 +20,22 @@ if (!fs.existsSync(COOLSTUFF_VIDEOS_DIR)) fs.mkdirSync(COOLSTUFF_VIDEOS_DIR, { r
 // latest deploy.
 const APP_VERSION = '1.6.0';
 
-// Family members are fixed configuration (not user-editable data),
-// so palette/name tweaks here always take effect immediately.
+// Seed members for a brand-new install (or an old data file that predates
+// members being user-editable). After that, the member list lives in the
+// db and can grow via POST /api/members.
 // 'family' is a special category for whole-household items (holidays, family outings, etc.)
-const MEMBERS = [
+// and can't be deleted since several upload forms fall back to it by id.
+const DEFAULT_MEMBERS = [
   { id: 'ben', name: 'Ben', color: '#A9C8DE' },      // pastel blue
   { id: 'inez', name: 'Inez', color: '#CBB8DD' },    // pastel purple
   { id: 'tyler', name: 'Tyler', color: '#E6A9A0' },  // pastel red
   { id: 'miya', name: 'Miya', color: '#A9DBC0' },    // pastel mint green
   { id: 'family', name: 'Family', color: '#F0C9A0' } // pastel peach, whole-household items
+];
+// Cycled through when a new member is added, so each one gets a distinct pastel color.
+const MEMBER_COLOR_PALETTE = [
+  '#F0E0A0', '#A0D9D9', '#E8B6D0', '#B8C6D9', '#C9E0A0',
+  '#D9C2A0', '#A0C9E0', '#E0A0B8', '#C2E0C9', '#D0C9E8'
 ];
 
 // ---------- Simple JSON "database" ----------
@@ -47,17 +54,18 @@ function loadDB() {
       coolaudio: [],
       coolvideos: [],
       coolwishlist: [],
+      members: DEFAULT_MEMBERS.slice(),
       googleAuth: {}
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(initial, null, 2));
     return initial;
   }
   const db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-  delete db.members; // legacy field, no longer stored here
   // Ensure any newly-added collections exist even for older data files
   ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio', 'coolvideos', 'coolwishlist'].forEach(key => {
     if (!Array.isArray(db[key])) db[key] = [];
   });
+  if (!Array.isArray(db.members)) db.members = DEFAULT_MEMBERS.slice(); // backfill for data files from before members were editable
   if (typeof db.googleAuth !== 'object' || db.googleAuth === null || Array.isArray(db.googleAuth)) db.googleAuth = {};
   return db;
 }
@@ -281,7 +289,25 @@ async function handleAPI(req, res, urlPath) {
   const collections = ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio', 'coolvideos', 'coolwishlist'];
 
   if (resource === 'members' && req.method === 'GET') {
-    return sendJSON(res, 200, MEMBERS);
+    return sendJSON(res, 200, db.members);
+  }
+  if (resource === 'members' && req.method === 'POST') {
+    const body = await readBody(req);
+    const name = (body.name || '').trim();
+    if (!name) return sendJSON(res, 400, { error: 'name is required' });
+    const color = MEMBER_COLOR_PALETTE[db.members.length % MEMBER_COLOR_PALETTE.length];
+    const member = { id: id(), name, color };
+    db.members.push(member);
+    saveDB(db);
+    return sendJSON(res, 201, member);
+  }
+  if (resource === 'members' && itemId && req.method === 'DELETE') {
+    if (itemId === 'family') return sendJSON(res, 400, { error: "The Family category can't be deleted" });
+    const idx = db.members.findIndex(m => m.id === itemId);
+    if (idx === -1) return sendJSON(res, 404, { error: 'Not found' });
+    const removed = db.members.splice(idx, 1)[0];
+    saveDB(db);
+    return sendJSON(res, 200, removed);
   }
 
   if (resource === 'version' && req.method === 'GET') {
