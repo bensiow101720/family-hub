@@ -1874,13 +1874,9 @@ function adjustedRating(avg, consCount, prosCount, proPercent) {
 function isDenmarkTrip(name) {
   return /denmark/i.test(name || '');
 }
-// Greece & Turkey gets its own, higher per-pro bonus instead of the usual 1%.
-const GREECE_TURKEY_PRO_BONUS_PERCENT = 5.12;
-function isGreeceTurkeyTrip(name) {
-  return /greece/i.test(name || '') && /turkey/i.test(name || '');
-}
 // Computes everything the card/modal need to show a trip's score in one
-// place. Denmark is pinned at a fixed 99.94% with no breakdown shown.
+// place. Denmark is pinned at a fixed 99.94%. The breakdown (`details`)
+// is kept here for anything that wants it, but the UI no longer renders it.
 function tripScore(t) {
   const avg = avgRating(t.ratings);
   const consCount = (t.cons || []).length;
@@ -1889,11 +1885,10 @@ function tripScore(t) {
   if (isDenmarkTrip(t.name)) {
     return { avg: 99.94, consCount, prosCount, n, adjusted: 99.94, details: [], explain: false };
   }
-  const proPercent = isGreeceTurkeyTrip(t.name) ? GREECE_TURKEY_PRO_BONUS_PERCENT : PRO_BONUS_PERCENT;
-  const adjusted = adjustedRating(avg, consCount, prosCount, proPercent);
+  const adjusted = adjustedRating(avg, consCount, prosCount);
   const details = [];
   if (n > 1) details.push(`avg of ${n}`);
-  if (prosCount > 0) details.push(`+${fmtRating(prosCount * proPercent)}% for ${prosCount} pro${prosCount > 1 ? 's' : ''}`);
+  if (prosCount > 0) details.push(`+${prosCount * PRO_BONUS_PERCENT}% for ${prosCount} pro${prosCount > 1 ? 's' : ''}`);
   if (consCount > 0) details.push(`-${consCount * CON_PENALTY_PERCENT}% for ${consCount} con${consCount > 1 ? 's' : ''}`);
   return { avg, consCount, prosCount, n, adjusted, details, explain: true };
 }
@@ -1913,14 +1908,14 @@ async function loadTrips() {
     return adjB - adjA;
   });
   el.innerHTML = ranked.map((t, i) => {
-    const { consCount, adjusted, details } = tripScore(t);
+    const { consCount, adjusted } = tripScore(t);
     const medal = adjusted != null ? TRIP_MEDALS[i] : null;
     return `
     <div class="card trip-card" onclick="openTripModal('${t.id}')">
       ${medal ? `<div class="trip-medal">${medal}</div>` : ''}
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
         <div class="section-title" style="margin-bottom:4px;">🌍 ${escapeHtml(t.name)}</div>
-        ${adjusted != null ? `<div class="trip-rating-badge">${fmtRating(adjusted)}<span>/100${details.length ? ` · ${details.join(' · ')}` : ''}</span></div>` : ''}
+        ${adjusted != null ? `<div class="trip-rating-badge">${fmtRating(adjusted)}<span>/100</span></div>` : ''}
       </div>
       <div class="trip-dates">${t.startDate ? fmtDate(t.startDate) + ' – ' + fmtDate(t.endDate) : 'Dates not set yet'}</div>
       <div class="item-sub" style="margin-top:6px;">${(t.pros||[]).length} pros · ${consCount} cons</div>
@@ -1939,7 +1934,7 @@ function openTripModal(id) {
   const t = allTrips.find(x => x.id === id);
   document.getElementById('trip-modal-title').textContent = '🌍 Trip details';
   const cities = (t.cities || '').split(',').map(c => c.trim()).filter(Boolean);
-  const { avg: modalAvg, adjusted: modalAdjusted, details: modalDetails, explain: modalExplain } = tripScore(t);
+  const { adjusted: modalAdjusted } = tripScore(t);
   document.getElementById('trip-modal-body').innerHTML = `
     <div class="edit-form" style="margin-bottom:14px;">
       <input type="text" id="trip-name-${id}" value="${escapeHtml(t.name)}" style="font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:17px;">
@@ -1965,9 +1960,7 @@ function openTripModal(id) {
         <div class="rating-result">
           ${modalAdjusted == null
             ? `<span>No ratings yet</span>`
-            : modalExplain
-              ? `Overall score: <strong>${fmtRating(modalAdjusted)}</strong>/100 <span>(raw avg ${fmtRating(modalAvg)}${modalDetails.map(s => ` · ${s}`).join('')})</span>`
-              : `Overall score: <strong>${fmtRating(modalAdjusted)}</strong>/100`}
+            : `Overall score: <strong>${fmtRating(modalAdjusted)}</strong>/100`}
         </div>
       </div>
       <div class="info-box" style="grid-column: 1 / -1;">
