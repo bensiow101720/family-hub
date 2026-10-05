@@ -54,6 +54,7 @@ function loadDB() {
       coolaudio: [],
       coolvideos: [],
       coolwishlist: [],
+      coolplaylists: [],
       members: DEFAULT_MEMBERS.slice(),
       googleAuth: {}
     };
@@ -62,7 +63,7 @@ function loadDB() {
   }
   const db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
   // Ensure any newly-added collections exist even for older data files
-  ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio', 'coolvideos', 'coolwishlist'].forEach(key => {
+  ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio', 'coolvideos', 'coolwishlist', 'coolplaylists'].forEach(key => {
     if (!Array.isArray(db[key])) db[key] = [];
   });
   if (!Array.isArray(db.members)) db.members = DEFAULT_MEMBERS.slice(); // backfill for data files from before members were editable
@@ -303,6 +304,81 @@ function handleGoogleStatus(req, res) {
   return sendJSON(res, 200, { connected });
 }
 
+// ---------- Spotify playlist import (metadata only, no audio) ----------
+// Reads public playlist/track info via Spotify's Web API so it can be shown
+// and linked back to Spotify for actual playback — never downloads or
+// extracts audio, which would violate Spotify's terms and copyright.
+// Requires the family's own Spotify app credentials, set as environment
+// variables SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET (free to create at
+// developer.spotify.com — no redirect URI or user login needed, since this
+// only reads public data via the app-level Client Credentials flow).
+let spotifyToken = null; // { value, expiresAt }
+async function getSpotifyToken() {
+  if (spotifyToken && spotifyToken.expiresAt > Date.now() + 10000) return spotifyToken.value;
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+    },
+    body: 'grant_type=client_credentials'
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error_description || 'Spotify auth failed');
+  spotifyToken = { value: data.access_token, expiresAt: Date.now() + data.expires_in * 1000 };
+  return spotifyToken.value;
+}
+function extractSpotifyPlaylistId(input) {
+  const s = (input || '').trim();
+  let m = s.match(/playlist[/:]([a-zA-Z0-9]+)/);
+  return m ? m[1].split('?')[0] : null;
+}
+function msToDuration(ms) {
+  const totalSec = Math.round(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}:${String(sec).padStart(2, '0')}`;
+}
+async function fetchSpotifyPlaylist(playlistId) {
+  const token = await getSpotifyToken();
+  if (!token) {
+    const err = new Error("Spotify isn't configured yet — SPOTIFY_CLIENT_ID/SECRET are missing on the server.");
+    err.statusCode = 500;
+    throw err;
+  }
+  const res = await fetch(
+    `https://api.spotify.com/v1/playlists/${playlistId}?fields=name,owner.display_name,images,external_urls,tracks.items(track(name,artists(name),album(name,images),duration_ms,external_urls))`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  const data = await res.json();
+  if (!res.ok) {
+    const err = new Error((data.error && data.error.message) || 'Could not load that playlist');
+    err.statusCode = res.status === 404 ? 404 : 500;
+    throw err;
+  }
+  const tracks = (data.tracks.items || [])
+    .map(it => it.track)
+    .filter(Boolean)
+    .map(t => ({
+      name: t.name,
+      artists: (t.artists || []).map(a => a.name).join(', '),
+      album: t.album ? t.album.name : '',
+      image: t.album && t.album.images && t.album.images.length ? t.album.images[t.album.images.length - 1].url : null,
+      duration: msToDuration(t.duration_ms || 0),
+      url: t.external_urls ? t.external_urls.spotify : null
+    }));
+  return {
+    name: data.name,
+    owner: data.owner ? data.owner.display_name : '',
+    image: data.images && data.images.length ? data.images[0].url : null,
+    url: data.external_urls ? data.external_urls.spotify : `https://open.spotify.com/playlist/${playlistId}`,
+    tracks
+  };
+}
+
 // ---------- API ----------
 async function handleAPI(req, res, urlPath) {
   const db = loadDB();
@@ -310,7 +386,7 @@ async function handleAPI(req, res, urlPath) {
   const resource = parts[1]; // events, chores, lists, reminders, members, files
   const itemId = parts[2];
 
-  const collections = ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio', 'coolvideos', 'coolwishlist'];
+  const collections = ['events', 'chores', 'lists', 'reminders', 'files', 'trips', 'budgets', 'gallery', 'coolphotos', 'coolaudio', 'coolvideos', 'coolwishlist', 'coolplaylists'];
 
   if (resource === 'members' && req.method === 'GET') {
     return sendJSON(res, 200, db.members);
@@ -474,6 +550,23 @@ async function handleAPI(req, res, urlPath) {
     }
     saveDB(db);
     return sendJSON(res, 200, removed);
+  }
+
+  // Spotify playlist import: fetch track/artist metadata (no audio) and store it
+  if (resource === 'coolplaylists' && req.method === 'POST') {
+    const body = await readBody(req);
+    const playlistId = extractSpotifyPlaylistId(body.link);
+    if (!playlistId) return sendJSON(res, 400, { error: "That doesn't look like a Spotify playlist link" });
+    let playlist;
+    try {
+      playlist = await fetchSpotifyPlaylist(playlistId);
+    } catch (err) {
+      return sendJSON(res, err.statusCode || 500, { error: err.message });
+    }
+    const item = { id: id(), ...playlist, person: body.person || 'family', createdAt: new Date().toISOString() };
+    db.coolplaylists.unshift(item); // newest first
+    saveDB(db);
+    return sendJSON(res, 201, item);
   }
 
   if (collections.includes(resource)) {

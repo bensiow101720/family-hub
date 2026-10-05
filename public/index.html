@@ -439,6 +439,23 @@
   .cool-video-item .cool-video-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; }
   .cool-video-item .cool-video-caption { font-size: 12.5px; font-weight: 700; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cool-video-item .cool-video-sub { font-size: 11px; color: var(--muted); font-weight: 600; }
+  .playlist-item { border: 1px solid var(--glass-border); border-radius: var(--radius-md); margin-bottom: 14px; overflow: hidden; background: var(--card-solid); box-shadow: var(--shadow-sm); }
+  .playlist-header { display: flex; align-items: center; gap: 14px; padding: 14px; cursor: pointer; }
+  .playlist-cover { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--surface-2); }
+  .playlist-info { flex: 1; min-width: 0; }
+  .playlist-name { font-weight: 800; font-size: 15px; color: var(--ink); }
+  .playlist-meta { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .playlist-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .playlist-tracks { display: none; border-top: 1px solid var(--glass-border); max-height: 360px; overflow-y: auto; }
+  .playlist-tracks.open { display: block; }
+  .track-row { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-top: 1px solid var(--glass-border); text-decoration: none; color: inherit; }
+  .track-row:first-child { border-top: none; }
+  .track-row:hover { background: var(--surface-2); }
+  .track-cover { width: 36px; height: 36px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--surface-2); }
+  .track-info { flex: 1; min-width: 0; }
+  .track-name { font-weight: 700; font-size: 13px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .track-artist { font-size: 11.5px; color: var(--muted); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .track-duration { font-size: 11px; color: var(--muted); font-weight: 700; flex-shrink: 0; }
   .audio-item { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border: 1px solid var(--glass-border); border-radius: var(--radius-md); margin-bottom: 10px; flex-wrap: wrap; background: var(--surface-2); box-shadow: var(--shadow-sm); transition: transform 0.15s ease, box-shadow 0.15s ease; }
   .audio-item:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
   .audio-item .audio-meta { font-weight: 700; font-size: 13.5px; color: var(--ink); min-width: 110px; }
@@ -896,6 +913,18 @@
       </div>
       <div class="card"><div id="wishlist-list"></div></div>
 
+      <div class="card">
+        <div class="section-title">🎵 Import a Spotify playlist</div>
+        <p style="font-weight:600; color:var(--muted); margin-top:-6px;">Pulls in the track list and cover art so you can browse it here — tap a track to play it on Spotify. This doesn't download or convert any audio.</p>
+        <form class="add-form" id="playlist-form">
+          <input type="text" id="playlist-link" placeholder="Paste a Spotify playlist link" style="flex:1 1 220px;" required>
+          <select id="playlist-person"></select>
+          <button class="btn" type="submit">Import</button>
+        </form>
+        <div id="playlist-import-status" style="font-size:13px; color:var(--muted);"></div>
+      </div>
+      <div class="card"><div id="playlist-list"></div></div>
+
       <div style="text-align:center; font-size:12px; color:var(--muted); font-weight:600; padding:4px 0 10px;" id="app-version"></div>
     </div>
 
@@ -1095,7 +1124,7 @@ function computeAutoWeather(citiesStr, startDate, endDate) {
 }
 
 function fillPersonSelects() {
-  ['event-person', 'chore-person', 'reminder-person', 'file-person', 'gallery-person', 'coolphoto-person', 'coolaudio-person', 'coolvideo-person', 'wishlist-person'].forEach(sid => {
+  ['event-person', 'chore-person', 'reminder-person', 'file-person', 'gallery-person', 'coolphoto-person', 'coolaudio-person', 'coolvideo-person', 'wishlist-person', 'playlist-person'].forEach(sid => {
     const el = document.getElementById(sid);
     el.innerHTML = MEMBERS.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
   });
@@ -2389,6 +2418,69 @@ async function deleteWishlistItem(id) {
   await api('/api/coolwishlist/' + id, 'DELETE');
   loadWishlist();
 }
+
+document.getElementById('playlist-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const linkInput = document.getElementById('playlist-link');
+  const statusEl = document.getElementById('playlist-import-status');
+  const link = linkInput.value.trim();
+  if (!link) return;
+  statusEl.textContent = 'Importing…';
+  try {
+    const result = await api('/api/coolplaylists', 'POST', {
+      link,
+      person: document.getElementById('playlist-person').value
+    });
+    if (result && result.error) throw new Error(result.error);
+    linkInput.value = '';
+    statusEl.textContent = '';
+    loadPlaylists();
+  } catch (err) {
+    statusEl.textContent = err.message || 'Import failed — check the link and try again.';
+  }
+});
+let allPlaylists = [];
+async function loadPlaylists() {
+  allPlaylists = await api('/api/coolplaylists');
+  const el = document.getElementById('playlist-list');
+  if (!allPlaylists.length) { el.innerHTML = '<div class="empty-state">No playlists imported yet — paste a Spotify playlist link above! 🎵</div>'; return; }
+  el.innerHTML = allPlaylists.map(p => `
+    <div class="playlist-item" data-id="${p.id}">
+      <div class="playlist-header" onclick="togglePlaylistTracks('${p.id}')">
+        ${p.image ? `<img class="playlist-cover" src="${p.image}" alt="">` : `<div class="playlist-cover"></div>`}
+        <div class="playlist-info">
+          <div class="playlist-name">${escapeHtml(p.name)}</div>
+          <div class="playlist-meta">${p.tracks.length} track${p.tracks.length === 1 ? '' : 's'}${p.owner ? ' · by ' + escapeHtml(p.owner) : ''} · imported by ${memberName(p.person)}</div>
+        </div>
+        <div class="playlist-actions">
+          <a class="btn small ghost" href="${p.url}" target="_blank" onclick="event.stopPropagation()">Open in Spotify ↗</a>
+          <button class="icon-btn" onclick="event.stopPropagation(); deletePlaylist('${p.id}')" title="Delete">🗑️</button>
+        </div>
+      </div>
+      <div class="playlist-tracks" id="playlist-tracks-${p.id}">
+        ${p.tracks.map(t => `
+          <a class="track-row" href="${t.url || p.url}" target="_blank">
+            ${t.image ? `<img class="track-cover" src="${t.image}" alt="">` : `<div class="track-cover"></div>`}
+            <div class="track-info">
+              <div class="track-name">${escapeHtml(t.name)}</div>
+              <div class="track-artist">${escapeHtml(t.artists)}</div>
+            </div>
+            <div class="track-duration">${t.duration}</div>
+          </a>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+function togglePlaylistTracks(id) {
+  const el = document.getElementById('playlist-tracks-' + id);
+  if (el) el.classList.toggle('open');
+}
+async function deletePlaylist(id) {
+  if (!confirm('Remove this imported playlist?')) return;
+  await api('/api/coolplaylists/' + id, 'DELETE');
+  loadPlaylists();
+}
 async function loadAppVersion() {
   try {
     const { version } = await api('/api/version');
@@ -2754,6 +2846,7 @@ async function init() {
   loadCoolAudio();
   loadCoolVideos();
   loadWishlist();
+  loadPlaylists();
   loadAppVersion();
 
   // Seed trip templates if they don't exist yet
