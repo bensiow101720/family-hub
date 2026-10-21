@@ -18,7 +18,7 @@ if (!fs.existsSync(COOLSTUFF_VIDEOS_DIR)) fs.mkdirSync(COOLSTUFF_VIDEOS_DIR, { r
 // Bumped by hand whenever a notable batch of features ships; shown in the
 // Cool Stuff panel so the family can tell at a glance if they're on the
 // latest deploy.
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.7.0';
 
 // Seed members for a brand-new install (or an old data file that predates
 // members being user-editable). After that, the member list lives in the
@@ -133,18 +133,6 @@ function serveStatic(req, res, urlPath) {
       res.writeHead(404);
       return res.end('Not found');
     }
-    const ext = path.extname(filePath);
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
-    res.end(content);
-  });
-}
-
-function serveGalleryPhoto(req, res, urlPath) {
-  const fileName = path.basename(urlPath); // strip any path traversal attempts
-  const filePath = path.join(GALLERY_DIR, fileName);
-  if (!filePath.startsWith(GALLERY_DIR)) { res.writeHead(403); return res.end('Forbidden'); }
-  fs.readFile(filePath, (err, content) => {
-    if (err) { res.writeHead(404); return res.end('Not found'); }
     const ext = path.extname(filePath);
     res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' });
     res.end(content);
@@ -417,18 +405,31 @@ async function handleAPI(req, res, urlPath) {
   // Gallery photo upload: decode base64 image, save to disk, store metadata
   if (resource === 'gallery' && req.method === 'POST') {
     const body = await readBody(req);
-    const { caption, person, imageData, fileName } = body;
-    if (!imageData || !imageData.startsWith('data:image/')) {
-      return sendJSON(res, 400, { error: 'imageData must be a base64 data URI (data:image/...)' });
+    const { caption, person, imageData, videoData } = body;
+    // Gallery takes either a photo (imageData) or a video (videoData); both
+    // live in the same folder and the same ordered list, tagged by type.
+    let ext, buffer, type;
+    if (videoData) {
+      const match = typeof videoData === 'string' && videoData.match(/^data:video\/([\w.+-]+);base64,(.+)$/);
+      if (!match) return sendJSON(res, 400, { error: 'videoData must be a base64 data URI (data:video/...)' });
+      const extMap = { mp4: 'mp4', quicktime: 'mov', webm: 'webm', 'x-m4v': 'mp4' };
+      ext = extMap[match[1]] || 'mp4';
+      buffer = Buffer.from(match[2], 'base64');
+      type = 'video';
+    } else {
+      if (!imageData || !imageData.startsWith('data:image/')) {
+        return sendJSON(res, 400, { error: 'imageData must be a base64 data URI (data:image/...)' });
+      }
+      const match = imageData.match(/^data:image\/(\w+);base64,(.+)$/);
+      if (!match) return sendJSON(res, 400, { error: 'Could not parse image data' });
+      ext = match[1] === 'jpeg' ? 'jpg' : match[1];
+      buffer = Buffer.from(match[2], 'base64');
+      type = 'photo';
     }
-    const match = imageData.match(/^data:image\/(\w+);base64,(.+)$/);
-    if (!match) return sendJSON(res, 400, { error: 'Could not parse image data' });
-    const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
-    const buffer = Buffer.from(match[2], 'base64');
     const photoId = id();
     const savedFileName = `${photoId}.${ext}`;
     fs.writeFileSync(path.join(GALLERY_DIR, savedFileName), buffer);
-    const item = { id: photoId, caption: caption || '', person: person || 'family', url: `/gallery-photos/${savedFileName}`, focalX: 50, focalY: 50, createdAt: new Date().toISOString() };
+    const item = { id: photoId, type, caption: caption || '', person: person || 'family', url: `/gallery-photos/${savedFileName}`, focalX: 50, focalY: 50, createdAt: new Date().toISOString() };
     db.gallery.unshift(item); // newest first; array order is the display order (also what drag-reorder rearranges)
     saveDB(db);
     return sendJSON(res, 201, item);
@@ -624,7 +625,7 @@ const server = http.createServer(async (req, res) => {
     } else if (urlPath === '/api/google-calendar/status') {
       handleGoogleStatus(req, res);
     } else if (urlPath.startsWith('/gallery-photos/')) {
-      serveGalleryPhoto(req, res, urlPath);
+      serveUploadedFile(req, res, GALLERY_DIR, urlPath); // Range support so gallery videos can seek
     } else if (urlPath.startsWith('/coolstuff-photos/')) {
       serveUploadedFile(req, res, COOLSTUFF_PHOTOS_DIR, urlPath);
     } else if (urlPath.startsWith('/coolstuff-audio/')) {

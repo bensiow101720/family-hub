@@ -419,6 +419,15 @@
     width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in;
     -webkit-user-drag: none; -webkit-touch-callout: none;
   }
+  .gallery-item video {
+    width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; pointer-events: none;
+  }
+  .gallery-item.is-video { cursor: zoom-in; }
+  .gallery-play-badge {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px;
+    border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; padding-left: 3px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  }
   .gallery-item.dragging { opacity: 0.55; transform: scale(1.04); box-shadow: var(--shadow-lg); z-index: 5; cursor: grabbing; pointer-events: none; }
   .gallery-item.drop-target { outline: 3px dashed var(--turquoise); outline-offset: -3px; }
 
@@ -507,6 +516,7 @@
     display: flex; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.2s ease, visibility 0.2s ease;
   }
   .lightbox-backdrop.open { opacity: 1; visibility: visible; pointer-events: auto; }
+  .lightbox-backdrop video { max-width: 92vw; max-height: 82vh; border-radius: var(--radius-md); box-shadow: 0 20px 60px rgba(0,0,0,0.55); background: #000; display: none; }
   .lightbox-backdrop img { max-width: 92vw; max-height: 82vh; border-radius: var(--radius-md); box-shadow: 0 20px 60px rgba(0,0,0,0.55); }
   .lightbox-caption { color: #fff; margin-top: 16px; font-weight: 700; text-align: center; font-family: 'Century Gothic', CenturyGothic, AppleGothic, 'URW Gothic', Futura, Avenir, 'Segoe UI', sans-serif; }
   .lightbox-close { position: absolute; top: 18px; right: 22px; background: rgba(255,255,255,0.18); border: none; color: #fff; width: 42px; height: 42px; border-radius: 50%; font-size: 18px; cursor: pointer; transition: background 0.15s ease; }
@@ -828,9 +838,9 @@
     <!-- GALLERY PANEL -->
     <div class="panel" id="panel-gallery">
       <div class="card">
-        <div class="section-title">🖼️ Add a photo</div>
+        <div class="section-title">🖼️ Add a photo or video</div>
         <form class="add-form" id="gallery-form" style="align-items:flex-start;">
-          <input type="file" id="gallery-file" accept="image/*" required>
+          <input type="file" id="gallery-file" accept="image/*,video/*,.mp4,.mov" required>
           <input type="text" id="gallery-caption" placeholder="Caption (optional)">
           <select id="gallery-person"></select>
           <button class="btn" type="submit">Upload</button>
@@ -983,6 +993,7 @@
 <div class="lightbox-backdrop" id="photo-lightbox">
   <button class="lightbox-close" id="lightbox-close">✕</button>
   <img id="lightbox-img" src="" alt="">
+  <video id="lightbox-video" controls playsinline preload="metadata"></video>
   <div class="lightbox-caption" id="lightbox-caption"></div>
 </div>
 
@@ -2171,29 +2182,51 @@ document.getElementById('gallery-form').addEventListener('submit', async e => {
   const fileInput = document.getElementById('gallery-file');
   const statusEl = document.getElementById('gallery-upload-status');
   if (!fileInput.files.length) return;
-  statusEl.textContent = 'Uploading…';
+  const file = fileInput.files[0];
+  const isVideo = (file.type || '').startsWith('video/') || /\.(mp4|mov|m4v|webm)$/i.test(file.name);
+  if (isVideo && file.size > GALLERY_VIDEO_MAX_MB * 1024 * 1024) {
+    statusEl.textContent = `That video is too big (max ${GALLERY_VIDEO_MAX_MB} MB) — try a shorter clip.`;
+    return;
+  }
+  statusEl.textContent = isVideo ? 'Uploading video… this can take a minute.' : 'Uploading…';
   try {
-    const imageData = await resizeImageFile(fileInput.files[0], 1600);
-    await api('/api/gallery', 'POST', {
+    const payload = {
       caption: document.getElementById('gallery-caption').value,
-      person: document.getElementById('gallery-person').value,
-      imageData
-    });
+      person: document.getElementById('gallery-person').value
+    };
+    if (isVideo) {
+      let videoData = await readFileAsDataURL(file);
+      // Some phones hand over .mov files with no MIME type; label them so the server accepts them
+      if (videoData.startsWith('data:;base64,') || videoData.startsWith('data:application/octet-stream;')) {
+        videoData = videoData.replace(/^data:[^;]*;/, /\.mov$/i.test(file.name) ? 'data:video/quicktime;' : 'data:video/mp4;');
+      }
+      if (!videoData.startsWith('data:video/')) throw new Error('not video');
+      payload.videoData = videoData;
+    } else {
+      payload.imageData = await resizeImageFile(file, 1600);
+    }
+    await api('/api/gallery', 'POST', payload);
     e.target.reset();
     statusEl.textContent = '';
     loadGallery();
   } catch (err) {
-    statusEl.textContent = 'Upload failed — try a different photo.';
+    statusEl.textContent = isVideo ? 'Upload failed — try a different video (MP4 or MOV works best).' : 'Upload failed — try a different photo.';
   }
 });
+const GALLERY_VIDEO_MAX_MB = 100;
 let allGalleryPhotos = [];
 async function loadGallery() {
   allGalleryPhotos = await api('/api/gallery');
   const el = document.getElementById('gallery-grid');
-  if (!allGalleryPhotos.length) { el.innerHTML = '<div class="empty-state">No photos yet — add your first key moment above! 📸</div>'; return; }
+  if (!allGalleryPhotos.length) { el.innerHTML = '<div class="empty-state">No photos or videos yet — add your first key moment above! 📸</div>'; return; }
   // Array order === display order (newest uploads are unshifted server-side,
   // and drag-reordering rewrites this same order), so no client-side sort/reverse.
-  el.innerHTML = allGalleryPhotos.map(p => `
+  el.innerHTML = allGalleryPhotos.map(p => p.type === 'video' ? `
+    <div class="gallery-item is-video" data-id="${p.id}" onclick="openLightboxById('${p.id}')" title="${escapeHtml(p.caption)}">
+      <video src="${p.url}#t=0.1" muted playsinline preload="metadata"></video>
+      <div class="gallery-play-badge">▶</div>
+    </div>
+  ` : `
     <div class="gallery-item" data-id="${p.id}">
       <img src="${p.url}" alt="${escapeHtml(p.caption)}" loading="lazy"
            style="object-position: ${p.focalX ?? 50}% ${p.focalY ?? 50}%"
@@ -2203,7 +2236,8 @@ async function loadGallery() {
   initGalleryDrag();
 }
 async function deleteGalleryPhoto(id) {
-  if (!confirm('Delete this photo?')) return;
+  const item = allGalleryPhotos.find(x => x.id === id);
+  if (!confirm(item && item.type === 'video' ? 'Delete this video?' : 'Delete this photo?')) return;
   await api('/api/gallery/' + id, 'DELETE');
   loadGallery();
 }
@@ -2497,6 +2531,10 @@ let photoMenuTargetId = null;
 function showPhotoMenu(id, x, y) {
   photoMenuTargetId = id;
   const menu = document.getElementById('photo-menu');
+  const item = allGalleryPhotos.find(x => x.id === id);
+  const isVideo = item && item.type === 'video';
+  document.getElementById('photo-menu-recenter').style.display = isVideo ? 'none' : ''; // recentering is for photos only
+  document.getElementById('photo-menu-delete').textContent = isVideo ? '🗑️ Delete video' : '🗑️ Delete photo';
   menu.style.left = Math.min(x, window.innerWidth - 190) + 'px';
   menu.style.top = Math.min(y, window.innerHeight - 100) + 'px';
   menu.classList.add('open');
@@ -2675,13 +2713,24 @@ function openLightboxById(id, source) {
   if (suppressNextGalleryClick) { suppressNextGalleryClick = false; return; }
   const p = (source || allGalleryPhotos).find(x => x.id === id);
   if (!p) return;
-  document.getElementById('lightbox-img').src = p.url;
+  const img = document.getElementById('lightbox-img');
+  const video = document.getElementById('lightbox-video');
+  if (p.type === 'video') {
+    img.style.display = 'none'; img.src = '';
+    video.style.display = 'block'; video.src = p.url;
+    video.play().catch(() => {}); // autoplay may be blocked; controls are there either way
+  } else {
+    video.style.display = 'none'; video.pause(); video.removeAttribute('src'); video.load();
+    img.style.display = ''; img.src = p.url;
+  }
   document.getElementById('lightbox-caption').textContent = [p.caption, memberName(p.person)].filter(Boolean).join(' · ');
   document.getElementById('photo-lightbox').classList.add('open');
 }
 function closeLightbox() {
   document.getElementById('photo-lightbox').classList.remove('open');
   document.getElementById('lightbox-img').src = '';
+  const video = document.getElementById('lightbox-video');
+  video.pause(); video.removeAttribute('src'); video.load(); video.style.display = 'none';
 }
 document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
 document.getElementById('photo-lightbox').addEventListener('click', e => { if (e.target.id === 'photo-lightbox') closeLightbox(); });

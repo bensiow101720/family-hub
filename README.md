@@ -31,3 +31,9 @@ No redirect URI or user login is needed — this only reads public playlist
 data via Spotify's app-level Client Credentials flow. Without these set,
 the import form shows a clear "not configured" message instead of failing
 silently.
+
+## Gallery videos
+The Gallery takes videos (MP4/MOV/WebM, up to 100 MB each) alongside photos.
+They're stored in the same `data/gallery-photos` folder, show as tiles with a
+play badge, can be drag-reordered with photos, and play full-screen when tapped.
+Videos count against the same storage as photos, so keep the Railway Volume in mind.
