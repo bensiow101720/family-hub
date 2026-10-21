@@ -838,12 +838,12 @@
     <!-- GALLERY PANEL -->
     <div class="panel" id="panel-gallery">
       <div class="card">
-        <div class="section-title">🖼️ Add a photo or video</div>
+        <div class="section-title">🖼️ Add photos or videos</div>
         <form class="add-form" id="gallery-form" style="align-items:flex-start;">
-          <input type="file" id="gallery-file" accept="image/*,video/*,.mp4,.mov" required>
+          <input type="file" id="gallery-file" accept="image/*,video/*,.mp4,.mov" multiple required>
           <input type="text" id="gallery-caption" placeholder="Caption (optional)">
           <select id="gallery-person"></select>
-          <button class="btn" type="submit">Upload</button>
+          <button class="btn" type="submit" id="gallery-upload-btn">Upload</button>
         </form>
         <div id="gallery-upload-status" style="font-size:13px; color:var(--muted);"></div>
       </div>
@@ -2177,40 +2177,76 @@ function resizeImageFile(file, maxDimension) {
     reader.readAsDataURL(file);
   });
 }
+function isGalleryVideoFile(file) {
+  return (file.type || '').startsWith('video/') || /\.(mp4|mov|m4v|webm)$/i.test(file.name);
+}
+// Upload one gallery file (photo or video). Throws with a short reason on failure.
+async function uploadGalleryFile(file, caption, person) {
+  const payload = { caption, person };
+  if (isGalleryVideoFile(file)) {
+    if (file.size > GALLERY_VIDEO_MAX_MB * 1024 * 1024) throw new Error(`over ${GALLERY_VIDEO_MAX_MB} MB`);
+    let videoData = await readFileAsDataURL(file);
+    // Some phones hand over .mov files with no MIME type; label them so the server accepts them
+    if (videoData.startsWith('data:;base64,') || videoData.startsWith('data:application/octet-stream;')) {
+      videoData = videoData.replace(/^data:[^;]*;/, /\.mov$/i.test(file.name) ? 'data:video/quicktime;' : 'data:video/mp4;');
+    }
+    if (!videoData.startsWith('data:video/')) throw new Error('not a supported video');
+    payload.videoData = videoData;
+  } else {
+    payload.imageData = await resizeImageFile(file, 1600);
+  }
+  const result = await api('/api/gallery', 'POST', payload);
+  if (!result || result.error) throw new Error((result && result.error) || 'upload failed');
+}
+// Batch add: pick as many photos/videos as you like; they upload one at a
+// time (so phones don't run out of memory) with a running count. The caption
+// and person apply to every file in the batch.
+document.getElementById('gallery-file').addEventListener('change', e => {
+  const n = e.target.files.length;
+  const btn = document.getElementById('gallery-upload-btn');
+  btn.textContent = n > 1 ? `Upload ${n}` : 'Upload';
+});
 document.getElementById('gallery-form').addEventListener('submit', async e => {
   e.preventDefault();
+  const form = e.target;
   const fileInput = document.getElementById('gallery-file');
   const statusEl = document.getElementById('gallery-upload-status');
-  if (!fileInput.files.length) return;
-  const file = fileInput.files[0];
-  const isVideo = (file.type || '').startsWith('video/') || /\.(mp4|mov|m4v|webm)$/i.test(file.name);
-  if (isVideo && file.size > GALLERY_VIDEO_MAX_MB * 1024 * 1024) {
-    statusEl.textContent = `That video is too big (max ${GALLERY_VIDEO_MAX_MB} MB) — try a shorter clip.`;
-    return;
-  }
-  statusEl.textContent = isVideo ? 'Uploading video… this can take a minute.' : 'Uploading…';
-  try {
-    const payload = {
-      caption: document.getElementById('gallery-caption').value,
-      person: document.getElementById('gallery-person').value
-    };
-    if (isVideo) {
-      let videoData = await readFileAsDataURL(file);
-      // Some phones hand over .mov files with no MIME type; label them so the server accepts them
-      if (videoData.startsWith('data:;base64,') || videoData.startsWith('data:application/octet-stream;')) {
-        videoData = videoData.replace(/^data:[^;]*;/, /\.mov$/i.test(file.name) ? 'data:video/quicktime;' : 'data:video/mp4;');
-      }
-      if (!videoData.startsWith('data:video/')) throw new Error('not video');
-      payload.videoData = videoData;
-    } else {
-      payload.imageData = await resizeImageFile(file, 1600);
+  const btn = document.getElementById('gallery-upload-btn');
+  const files = [...fileInput.files];
+  if (!files.length) return;
+  const caption = document.getElementById('gallery-caption').value;
+  const person = document.getElementById('gallery-person').value;
+  btn.disabled = true;
+  const failed = [];
+  let done = 0;
+  // New items go to the top of the gallery, so upload in reverse to keep
+  // the batch in the order it was picked.
+  for (let i = files.length - 1; i >= 0; i--) {
+    const file = files[i];
+    const kind = isGalleryVideoFile(file) ? 'video' : 'photo';
+    statusEl.textContent = files.length > 1
+      ? `Uploading ${done + failed.length + 1} of ${files.length}…${kind === 'video' ? ' (videos can take a minute)' : ''}`
+      : (kind === 'video' ? 'Uploading video… this can take a minute.' : 'Uploading…');
+    try {
+      await uploadGalleryFile(file, caption, person);
+      done++;
+      if (files.length > 1) loadGallery(); // show each one as it lands
+    } catch (err) {
+      failed.push(`${file.name} (${err.message})`);
     }
-    await api('/api/gallery', 'POST', payload);
-    e.target.reset();
-    statusEl.textContent = '';
-    loadGallery();
-  } catch (err) {
-    statusEl.textContent = isVideo ? 'Upload failed — try a different video (MP4 or MOV works best).' : 'Upload failed — try a different photo.';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Upload';
+  form.reset();
+  loadGallery();
+  if (!failed.length) {
+    statusEl.textContent = files.length > 1 ? `✅ Added all ${done}.` : '';
+  } else if (!done) {
+    statusEl.textContent = files.length > 1
+      ? `Upload failed for all ${failed.length}: ${failed.join(', ')}`
+      : `Upload failed — ${failed[0]}. MP4/MOV videos up to ${GALLERY_VIDEO_MAX_MB} MB work best.`;
+  } else {
+    statusEl.textContent = `Added ${done} of ${files.length}. Couldn't add: ${failed.join(', ')}`;
   }
 });
 const GALLERY_VIDEO_MAX_MB = 100;

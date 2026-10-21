@@ -36,4 +36,7 @@ silently.
 The Gallery takes videos (MP4/MOV/WebM, up to 100 MB each) alongside photos.
 They're stored in the same `data/gallery-photos` folder, show as tiles with a
 play badge, can be drag-reordered with photos, and play full-screen when tapped.
+You can pick many photos and videos at once (batch add): they upload one at a
+time with a running count, keep the order you picked them in, and any that
+fail (e.g. a video over 100 MB) are listed by name while the rest still go in.
 Videos count against the same storage as photos, so keep the Railway Volume in mind.
